@@ -1,0 +1,16 @@
+from django.urls import path
+from . import views
+
+app_name = 'reservations'
+
+urlpatterns = [
+    path('', views.reservation_list, name='list'),
+    path('search/', views.reservation_search, name='search'),
+    path('create/', views.reservation_create, name='create'),
+    path('<int:pk>/', views.reservation_detail, name='detail'),
+    path('<int:pk>/update/', views.reservation_update, name='update'),
+    path('<int:pk>/delete/', views.reservation_delete, name='delete'),
+    path('export/excel/', views.export_reservations_excel, name='export_excel'),
+    path('export/pdf/', views.export_reservations_pdf, name='export_pdf'),
+    path('dashboard/', views.dashboard, name='dashboard'),
+]

@@ -1,0 +1,295 @@
+{% extends 'reservations/base.html' %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="mb-0">
+                <i class="bi bi-speedometer2 text-primary"></i> Dashboard de Reservas
+            </h2>
+            
+            <!-- Filtros de fecha -->
+            <form method="get" class="d-flex gap-2">
+                <input type="date" name="date_from" value="{{ date_from|default:'' }}" class="form-control" placeholder="Desde">
+                <input type="date" name="date_to" value="{{ date_to|default:'' }}" class="form-control" placeholder="Hasta">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-filter"></i> Filtrar
+                </button>
+                <a href="{% url 'reservations:dashboard' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-clockwise"></i>
+                </a>
+            </form>
+        </div>
+
+        <!-- Métricas Principales -->
+        <div class="row mb-4">
+            <!-- Métricas Financieras -->
+            <div class="col-md-3 mb-3">
+                <div class="card bg-primary text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6 class="card-title">Ingresos Totales</h6>
+                                <h3 class="mb-0">${{ total_revenue|floatformat:2 }}</h3>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="bi bi-currency-dollar display-6"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-3 mb-3">
+                <div class="card bg-success text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6 class="card-title">Ganancia Neta</h6>
+                                <h3 class="mb-0">${{ total_profit|floatformat:2 }}</h3>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="bi bi-graph-up display-6"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-3 mb-3">
+                <div class="card bg-info text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6 class="card-title">Margen Promedio</h6>
+                                <h3 class="mb-0">{{ avg_profit_percentage|floatformat:2 }}%</h3>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="bi bi-percent display-6"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-3 mb-3">
+                <div class="card bg-warning text-dark">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6 class="card-title">Total Reservas</h6>
+                                <h3 class="mb-0">{{ total_reservations }}</h3>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="bi bi-calendar-check display-6"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gráficos y Estadísticas -->
+        <div class="row">
+            <!-- Gráfico de Estados -->
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-pie-chart"></i> Reservas por Estado
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="statusChart" width="400" height="300"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Top Hoteles -->
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-building"></i> Top 5 Hoteles
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="list-group">
+                            {% for hotel in hotel_counts %}
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                {{ hotel.hotel|truncatewords:3 }}
+                                <span class="badge bg-primary rounded-pill">{{ hotel.count }}</span>
+                            </div>
+                            {% empty %}
+                            <div class="text-muted text-center py-3">No hay datos</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Tendencia Mensual -->
+            <div class="col-md-12 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-graph-up"></i> Tendencia Mensual (Últimos 12 meses)
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="monthlyTrendChart" width="400" height="150"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Métricas Adicionales -->
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-building"></i> Top 5 Agencias
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="list-group">
+                            {% for agency in agency_counts %}
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                {{ agency.agency }}
+                                <span class="badge bg-success rounded-pill">{{ agency.count }}</span>
+                            </div>
+                            {% empty %}
+                            <div class="text-muted text-center py-3">No hay datos</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Resumen de Estados -->
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-info-circle"></i> Resumen por Estado
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        {% for status in status_counts %}
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>
+                                {% if status.status == 'OK' %}
+                                    <i class="bi bi-check-circle-fill text-success"></i>
+                                {% elif status.status == 'CXX' %}
+                                    <i class="bi bi-x-circle-fill text-danger"></i>
+                                {% else %}
+                                    <i class="bi bi-clock-fill text-warning"></i>
+                                {% endif %}
+                                {{ status.status }}
+                            </span>
+                            <strong>{{ status.count }}</strong>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+// Gráfico de Estados (Doughnut)
+const statusCtx = document.getElementById('statusChart').getContext('2d');
+const statusChart = new Chart(statusCtx, {
+    type: 'doughnut',
+    data: {
+        labels: {{ status_data.labels|safe }},
+        datasets: [{
+            data: {{ status_data.data|safe }},
+            backgroundColor: {{ status_data.colors|safe }},
+            borderWidth: 2,
+            borderColor: '#fff'
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'bottom'
+            }
+        }
+    }
+});
+
+// Gráfico de Tendencia Mensual (Line)
+const trendCtx = document.getElementById('monthlyTrendChart').getContext('2d');
+const trendChart = new Chart(trendCtx, {
+    type: 'line',
+    data: {
+        labels: {{ monthly_trend.labels|safe }},
+        datasets: [
+            {
+                label: 'Reservas',
+                data: {{ monthly_trend.reservations|safe }},
+                borderColor: '#3498db',
+                backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                tension: 0.4,
+                yAxisID: 'y'
+            },
+            {
+                label: 'Ingresos ($)',
+                data: {{ monthly_trend.revenue|safe }},
+                borderColor: '#27ae60',
+                backgroundColor: 'rgba(39, 174, 96, 0.1)',
+                tension: 0.4,
+                yAxisID: 'y1'
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        interaction: {
+            mode: 'index',
+            intersect: false
+        },
+        scales: {
+            y: {
+                type: 'linear',
+                display: true,
+                position: 'left',
+                title: {
+                    display: true,
+                    text: 'Reservas'
+                }
+            },
+            y1: {
+                type: 'linear',
+                display: true,
+                position: 'right',
+                title: {
+                    display: true,
+                    text: 'Ingresos ($)'
+                },
+                grid: {
+                    drawOnChartArea: false
+                }
+            }
+        }
+    }
+});
+</script>
+
+<style>
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    border: 1px solid rgba(0, 0, 0, 0.125);
+}
+.card-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-bottom: none;
+}
+</style>
+{% endblock %}

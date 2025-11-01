@@ -1,0 +1,27 @@
+{% extends 'reservations/base.html' %}
+
+{% block content %}
+<h2>Iniciar Sesión</h2>
+
+<form method="post">
+    {% csrf_token %}
+    
+    <p>
+        <label>Usuario:</label>
+        <input type="text" name="username" required style="width: 300px;">
+    </p>
+    
+    <p>
+        <label>Contraseña:</label>
+        <input type="password" name="password" required style="width: 300px;">
+    </p>
+
+    <button type="submit" class="btn btn-success">Iniciar Sesión</button>
+</form>
+
+{% if form.errors %}
+<div class="alert" style="background-color: #f8d7da; color: #721c24; padding: 10px; margin-top: 15px;">
+    Usuario o contraseña incorrectos.
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,121 @@
+{% extends 'reservations/base.html' %}
+
+{% block content %}
+<h2>{{ title }}</h2>
+
+<form method="post">
+    {% csrf_token %}
+    
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+        <div>
+            <h3>Información de Reserva</h3>
+            <p>
+                <label>Estado:</label>
+                {{ form.status }}
+            </p>
+            <p>
+                <label>Agencia:</label>
+                {{ form.agency }}
+            </p>
+            <p>
+                <label>Código de Booking:</label>
+                {{ form.booking_code }}
+            </p>
+            <p>
+                <label>Nombres de Clientes:</label>
+                {{ form.clients_names }}
+            </p>
+            <p>
+                <label>Hotel:</label>
+                {{ form.hotel }}
+            </p>
+        </div>
+        
+        <div>
+            <h3>Fechas y Confirmación</h3>
+            <p>
+                <label>Check-in:</label>
+                {{ form.date_from }}
+            </p>
+            <p>
+                <label>Check-out:</label>
+                {{ form.date_to }}
+            </p>
+            <p>
+                <label>Confirmación Hotel:</label>
+                {{ form.hotel_confirmation }}
+            </p>
+            <p>
+                <label>PAX:</label>
+                {{ form.pax }}
+            </p>
+            <p>
+                <label>Tipo de Habitación:</label>
+                {{ form.room_type }}
+            </p>
+        </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px;">
+        <div>
+            <h3>Información Financiera</h3>
+            <p>
+                <label>Precio de Venta (USD):</label>
+                {{ form.sale_price }}
+            </p>
+            <p>
+                <label>Costo (USD):</label>
+                {{ form.touch_cost }}
+            </p>
+            {% if form.instance.profit_percentage %}
+            <p>
+                <label>Margen de Ganancia:</label>
+                <strong>{{ form.instance.profit_percentage|floatformat:2 }}%</strong>
+            </p>
+            {% endif %}
+        </div>
+        
+        <div>
+            <h3>Información Adicional</h3>
+            <p>
+                <label>Tarifas Válidas:</label>
+                {{ form.valid_rates }}
+            </p>
+            <p>
+                <label>Nacionalidad:</label>
+                {{ form.nationality }}
+            </p>
+            <p>
+                <label>Observaciones:</label>
+                {{ form.remarks }}
+            </p>
+        </div>
+    </div>
+
+    <div style="margin-top: 20px;">
+        <button type="submit" class="btn btn-success">Guardar Reserva</button>
+        <a href="{% url 'reservations:list' %}" class="btn">Cancelar</a>
+    </div>
+</form>
+
+<style>
+    form p {
+        margin-bottom: 15px;
+    }
+    label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+    }
+    input, select, textarea {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        box-sizing: border-box;
+    }
+    textarea {
+        resize: vertical;
+    }
+</style>
+{% endblock %}

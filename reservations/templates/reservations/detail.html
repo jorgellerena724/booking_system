@@ -1,0 +1,59 @@
+{% extends 'reservations/base.html' %}
+
+{% block content %}
+<h2>Detalle de Reserva: {{ reservation.booking_code }}</h2>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+    <div>
+        <h3>Información de Reserva</h3>
+        <p><strong>Estado:</strong> 
+            {% if reservation.status == 'OK' %}
+                <span style="color: green;">✓ Confirmada</span>
+            {% elif reservation.status == 'CXX' %}
+                <span style="color: red;">✗ Cancelada</span>
+            {% else %}
+                <span style="color: orange;">⏳ Pendiente</span>
+            {% endif %}
+        </p>
+        <p><strong>Agencia:</strong> {{ reservation.agency }}</p>
+        <p><strong>Código de Booking:</strong> {{ reservation.booking_code }}</p>
+        <p><strong>Clientes:</strong> {{ reservation.clients_names }}</p>
+        <p><strong>Hotel:</strong> {{ reservation.hotel }}</p>
+    </div>
+    
+    <div>
+        <h3>Fechas y Confirmación</h3>
+        <p><strong>Check-in:</strong> {{ reservation.date_from }}</p>
+        <p><strong>Check-out:</strong> {{ reservation.date_to }}</p>
+        <p><strong>Confirmación Hotel:</strong> {{ reservation.hotel_confirmation|default:"Pendiente" }}</p>
+        <p><strong>PAX:</strong> {{ reservation.pax }}</p>
+        <p><strong>Tipo de Habitación:</strong> {{ reservation.room_type }}</p>
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px;">
+    <div>
+        <h3>Información Financiera</h3>
+        <p><strong>Precio de Venta:</strong> ${{ reservation.sale_price }} USD</p>
+        <p><strong>Costo:</strong> ${{ reservation.touch_cost }} USD</p>
+        <p><strong>Margen de Ganancia:</strong> 
+            <span style="color: {% if reservation.profit_percentage > 0 %}green{% else %}red{% endif %};">
+                {{ reservation.profit_percentage|floatformat:2 }}%
+            </span>
+        </p>
+    </div>
+    
+    <div>
+        <h3>Información Adicional</h3>
+        <p><strong>Tarifas Válidas:</strong> {{ reservation.valid_rates|default:"N/A" }}</p>
+        <p><strong>Nacionalidad:</strong> {{ reservation.nationality }}</p>
+        <p><strong>Observaciones:</strong> {{ reservation.remarks|default:"Ninguna" }}</p>
+    </div>
+</div>
+
+<div style="margin-top: 20px;">
+    <a href="{% url 'reservations:update' reservation.pk %}" class="btn btn-warning">Editar</a>
+    <a href="{% url 'reservations:delete' reservation.pk %}" class="btn btn-danger">Eliminar</a>
+    <a href="{% url 'reservations:list' %}" class="btn">Volver a la Lista</a>
+</div>
+{% endblock %}

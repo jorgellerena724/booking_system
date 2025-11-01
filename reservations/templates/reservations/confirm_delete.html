@@ -1,0 +1,19 @@
+{% extends 'reservations/base.html' %}
+
+{% block content %}
+<h2>Confirmar Eliminación</h2>
+
+<div class="alert" style="background-color: #f8d7da; color: #721c24; padding: 15px; border-radius: 5px;">
+    <h3>¿Estás seguro de que quieres eliminar esta reserva?</h3>
+    <p><strong>Código:</strong> {{ reservation.booking_code }}</p>
+    <p><strong>Clientes:</strong> {{ reservation.clients_names }}</p>
+    <p><strong>Hotel:</strong> {{ reservation.hotel }}</p>
+    <p><strong>Check-in:</strong> {{ reservation.date_from }}</p>
+</div>
+
+<form method="post">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-danger">Sí, Eliminar</button>
+    <a href="{% url 'reservations:list' %}" class="btn">Cancelar</a>
+</form>
+{% endblock %}

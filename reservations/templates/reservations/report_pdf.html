@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            line-height: 1.4;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .header h1 {
+            color: #2c3e50;
+            margin: 0;
+            font-size: 24px;
+        }
+        
+        .header .subtitle {
+            color: #7f8c8d;
+            font-size: 14px;
+            margin: 5px 0;
+        }
+        
+        .summary {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            border-left: 4px solid #3498db;
+        }
+        
+        .summary-grid {
+            display: table;
+            width: 100%;
+            margin-top: 10px;
+        }
+        
+        .summary-row {
+            display: table-row;
+        }
+        
+        .summary-item {
+            display: table-cell;
+            text-align: center;
+            padding: 10px;
+            width: 33%;
+        }
+        
+        .summary-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .summary-label {
+            font-size: 11px;
+            color: #7f8c8d;
+            text-transform: uppercase;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 10px;
+        }
+        
+        th {
+            background-color: #34495e;
+            color: white;
+            padding: 8px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+        
+        td {
+            padding: 6px;
+            border: 1px solid #ddd;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        
+        .status-confirmed {
+            color: #27ae60;
+            font-weight: bold;
+        }
+        
+        .status-cancelled {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        
+        .status-pending {
+            color: #f39c12;
+            font-weight: bold;
+        }
+        
+        .footer {
+            margin-top: 30px;
+            padding-top: 15px;
+            border-top: 1px solid #ddd;
+            font-size: 10px;
+            color: #7f8c8d;
+            text-align: center;
+        }
+        
+        .filters-info {
+            background: #fff3cd;
+            padding: 10px;
+            border-radius: 3px;
+            margin: 10px 0;
+            border-left: 4px solid #ffc107;
+            font-size: 11px;
+        }
+        
+        .profit-positive {
+            color: #27ae60;
+        }
+        
+        .profit-negative {
+            color: #e74c3c;
+        }
+        
+        .page-break {
+            page-break-after: always;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Reporte de Reservas Hoteleras</h1>
+        <div class="subtitle">Sistema de Gestión de Reservas</div>
+        <div class="subtitle">Generado: {{ generated_date }}</div>
+    </div>
+
+    {% if filters_applied %}
+    <div class="filters-info">
+        <strong>Filtros aplicados:</strong>
+        {% if request_params.search_text %} • Texto: "{{ request_params.search_text }}"{% endif %}
+        {% if request_params.agency %} • Agencia: "{{ request_params.agency }}"{% endif %}
+        {% if request_params.hotel %} • Hotel: "{{ request_params.hotel }}"{% endif %}
+        {% if request_params.status %} • Estado: "{{ request_params.status }}"{% endif %}
+        {% if request_params.date_from %} • Desde: {{ request_params.date_from }}{% endif %}
+        {% if request_params.date_to %} • Hasta: {{ request_params.date_to }}{% endif %}
+        {% if request_params.nationality %} • Nacionalidad: "{{ request_params.nationality }}"{% endif %}
+        {% if request_params.room_type %} • Tipo habitación: "{{ request_params.room_type }}"{% endif %}
+    </div>
+    {% endif %}
+
+    <div class="summary">
+        <h3 style="margin: 0 0 10px 0; color: #2c3e50;">Resumen Ejecutivo</h3>
+        <div class="summary-grid">
+            <div class="summary-row">
+                <div class="summary-item">
+                    <div class="summary-value">{{ total_reservations }}</div>
+                    <div class="summary-label">Total Reservas</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-value">${{ total_revenue|floatformat:2 }}</div>
+                    <div class="summary-label">Ingresos Totales</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-value">${{ total_profit|floatformat:2 }}</div>
+                    <div class="summary-label">Ganancia Neta</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Código</th>
+                <th>Cliente</th>
+                <th>Hotel</th>
+                <th>Check-in</th>
+                <th>Check-out</th>
+                <th>Estado</th>
+                <th>PAX</th>
+                <th>Precio Venta</th>
+                <th>Costo</th>
+                <th>Profit %</th>
+                <th>Agencia</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for reservation in reservations %}
+            <tr>
+                <td><strong>{{ reservation.booking_code }}</strong></td>
+                <td>{{ reservation.clients_names|truncatewords:2 }}</td>
+                <td>{{ reservation.hotel|truncatewords:2 }}</td>
+                <td>{{ reservation.date_from }}</td>
+                <td>{{ reservation.date_to }}</td>
+                <td>
+                    {% if reservation.status == 'OK' %}
+                        <span class="status-confirmed">Confirmada</span>
+                    {% elif reservation.status == 'CXX' %}
+                        <span class="status-cancelled">Cancelada</span>
+                    {% else %}
+                        <span class="status-pending">Pendiente</span>
+                    {% endif %}
+                </td>
+                <td style="text-align: center;">{{ reservation.pax }}</td>
+                <td style="text-align: right;">${{ reservation.sale_price|floatformat:2 }}</td>
+                <td style="text-align: right;">${{ reservation.touch_cost|floatformat:2 }}</td>
+                <td style="text-align: right;" class="{% if reservation.profit_percentage > 0 %}profit-positive{% else %}profit-negative{% endif %}">
+                    {{ reservation.profit_percentage|floatformat:2 }}%
+                </td>
+                <td>{{ reservation.agency|truncatewords:1 }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="11" style="text-align: center; padding: 20px; color: #7f8c8d;">
+                    No se encontraron reservas con los criterios especificados
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="footer">
+        <p>Reporte generado automáticamente por el Sistema de Gestión de Reservas</p>
+        <p>© {{ generated_date|slice:":4" }} - Todos los derechos reservados</p>
+    </div>
+</body>
+</html>

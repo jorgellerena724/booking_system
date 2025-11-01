@@ -1,0 +1,230 @@
+{% extends 'reservations/base.html' %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="mb-0">
+                <i class="bi bi-search text-primary"></i> Búsqueda Avanzada
+            </h2>
+            <a href="{% url 'reservations:list' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-list-ul"></i> Ver Todas las Reservas
+            </a>
+        </div>
+
+        <!-- Search Card -->
+        <div class="card search-card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-funnel"></i> Filtros de Búsqueda
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="get" class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Buscar en todos los campos</label>
+                        <input type="text" name="search_text" value="{{ request.GET.search_text|default:'' }}" class="form-control" placeholder="Texto en cualquier campo...">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Agencia</label>
+                        <input type="text" name="agency" value="{{ request.GET.agency|default:'' }}" class="form-control">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Hotel</label>
+                        <input type="text" name="hotel" value="{{ request.GET.hotel|default:'' }}" class="form-control">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Nacionalidad</label>
+                        <input type="text" name="nationality" value="{{ request.GET.nationality|default:'' }}" class="form-control">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Estado</label>
+                        <select name="status" class="form-select">
+                            <option value="">Todos</option>
+                            <option value="OK" {% if request.GET.status == 'OK' %}selected{% endif %}>Confirmada</option>
+                            <option value="CXX" {% if request.GET.status == 'CXX' %}selected{% endif %}>Cancelada</option>
+                            <option value="PENDING" {% if request.GET.status == 'PENDING' %}selected{% endif %}>Pendiente</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Tipo de habitación</label>
+                        <input type="text" name="room_type" value="{{ request.GET.room_type|default:'' }}" class="form-control">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Fecha desde</label>
+                        <input type="date" name="date_from" value="{{ request.GET.date_from|default:'' }}" class="form-control">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Fecha hasta</label>
+                        <input type="date" name="date_to" value="{{ request.GET.date_to|default:'' }}" class="form-control">
+                    </div>
+                    
+                    <div class="col-12">
+                        <div class="d-flex gap-2 align-items-center">
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-search"></i> Buscar
+                            </button>
+                            <a href="{% url 'reservations:search' %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-clockwise"></i> Limpiar
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        {% if search_performed %}
+        <div class="card">
+            <div class="card-header bg-light">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-search-result"></i> Resultados de la Búsqueda
+                        <span class="badge bg-primary ms-2">{{ page_obj.paginator.count }} encontrados</span>
+                    </h5>
+                    {% if page_obj.paginator.count > 0 %}
+                    <div class="btn-group">
+                        <a href="?{{ request.GET.urlencode }}&export=excel" class="btn export-btn text-white btn-sm">
+                            <i class="bi bi-file-earmark-excel"></i> Exportar Excel
+                        </a>
+                        <a href="?{{ request.GET.urlencode }}&export=pdf" class="btn btn-danger btn-sm">
+                            <i class="bi bi-file-earmark-pdf"></i> Exportar PDF
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover mb-0">
+                        <thead class="table-dark">
+                            <tr>
+                                <th><i class="bi bi-hash"></i> Código</th>
+                                <th><i class="bi bi-person"></i> Cliente</th>
+                                <th><i class="bi bi-building"></i> Hotel</th>
+                                <th><i class="bi bi-calendar-check"></i> Check-in</th>
+                                <th><i class="bi bi-calendar-x"></i> Check-out</th>
+                                <th><i class="bi bi-info-circle"></i> Estado</th>
+                                <th><i class="bi bi-gear"></i> Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for reservation in page_obj %}
+                            <tr>
+                                <td>
+                                    <strong class="text-primary">{{ reservation.booking_code }}</strong>
+                                </td>
+                                <td>
+                                    <span data-bs-toggle="tooltip" title="{{ reservation.clients_names }}">
+                                        {{ reservation.clients_names|truncatewords:3 }}
+                                    </span>
+                                </td>
+                                <td>{{ reservation.hotel }}</td>
+                                <td>
+                                    <span class="badge bg-light text-dark">{{ reservation.date_from }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-light text-dark">{{ reservation.date_to }}</span>
+                                </td>
+                                <td>
+                                    {% if reservation.status == 'OK' %}
+                                        <span class="status-confirmed">
+                                            <i class="bi bi-check-circle-fill"></i> Confirmada
+                                        </span>
+                                    {% elif reservation.status == 'CXX' %}
+                                        <span class="status-cancelled">
+                                            <i class="bi bi-x-circle-fill"></i> Cancelada
+                                        </span>
+                                    {% else %}
+                                        <span class="status-pending">
+                                            <i class="bi bi-clock-fill"></i> Pendiente
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <a href="{% url 'reservations:detail' reservation.pk %}" 
+                                           class="btn btn-outline-primary" 
+                                           data-bs-toggle="tooltip" 
+                                           title="Ver detalles">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a href="{% url 'reservations:update' reservation.pk %}" 
+                                           class="btn btn-outline-warning" 
+                                           data-bs-toggle="tooltip" 
+                                           title="Editar">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="7" class="text-center py-4">
+                                    <div class="text-muted">
+                                        <i class="bi bi-exclamation-circle display-4"></i>
+                                        <h5 class="mt-2">No se encontraron reservas</h5>
+                                        <p>Intenta con otros criterios de búsqueda.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                {% if page_obj.paginator.num_pages > 1 %}
+                <nav aria-label="Page navigation" class="p-3 border-top">
+                    <ul class="pagination justify-content-center mb-0">
+                        {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" 
+                               href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                <i class="bi bi-chevron-double-left"></i>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" 
+                               href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                <i class="bi bi-chevron-left"></i>
+                            </a>
+                        </li>
+                        {% endif %}
+
+                        <li class="page-item active">
+                            <span class="page-link">
+                                Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+                            </span>
+                        </li>
+
+                        {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" 
+                               href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                <i class="bi bi-chevron-right"></i>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" 
+                               href="?page={{ page_obj.paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                <i class="bi bi-chevron-double-right"></i>
+                            </a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+            </div>
+        </div>
+        {% else %}
+        <!-- Mensaje cuando no hay búsqueda -->
+        <div class="text-center py-5">
+            <i class="bi bi-search display-1 text-muted"></i>
+            <h3 class="text-muted mt-3">Realiza una búsqueda</h3>
+            <p class="text-muted">Usa los filtros arriba para buscar reservas específicas.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,199 @@
+{% extends 'reservations/base.html' %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="mb-0">
+                <i class="bi bi-list-ul text-primary"></i> Todas las Reservas
+            </h2>
+            <div>
+                <a href="{% url 'reservations:search' %}" class="btn btn-success me-2">
+                    <i class="bi bi-search"></i> Búsqueda Avanzada
+                </a>
+                <a href="{% url 'reservations:create' %}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> Nueva Reserva
+                </a>
+            </div>
+        </div>
+
+        <!-- Info Card -->
+        <div class="card info-card mb-4">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <h5 class="card-title">
+                            <i class="bi bi-info-circle text-primary"></i> Resumen de Reservas
+                        </h5>
+                        <div class="d-flex gap-4 mt-3">
+                            <div>
+                                <h3 class="text-primary mb-0">{{ page_obj.paginator.count }}</h3>
+                                <small class="text-muted">Total Reservas</small>
+                            </div>
+                            <div>
+                                <h3 class="text-success mb-0">
+                                    {{ page_obj.paginator.count|default:0 }}
+                                </h3>
+                                <small class="text-muted">Disponibles</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 text-end">
+                        <div class="btn-group">
+                            <a href="?export=excel" class="btn export-btn text-white">
+                                <i class="bi bi-file-earmark-excel"></i> Exportar Excel
+                            </a>
+                            <a href="?export=pdf" class="btn btn-danger">
+                                <i class="bi bi-file-earmark-pdf"></i> Exportar PDF
+                            </a>
+                        </div>
+                        <p class="text-muted mt-2 small">
+                            Exporta todas las reservas del sistema
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reservations Table -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-table"></i> Lista Completa de Reservas
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover mb-0">
+                        <thead class="table-dark">
+                            <tr>
+                                <th><i class="bi bi-hash"></i> Código</th>
+                                <th><i class="bi bi-person"></i> Cliente</th>
+                                <th><i class="bi bi-building"></i> Hotel</th>
+                                <th><i class="bi bi-calendar-check"></i> Check-in</th>
+                                <th><i class="bi bi-calendar-x"></i> Check-out</th>
+                                <th><i class="bi bi-info-circle"></i> Estado</th>
+                                <th><i class="bi bi-gear"></i> Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for reservation in page_obj %}
+                            <tr>
+                                <td>
+                                    <strong class="text-primary">{{ reservation.booking_code }}</strong>
+                                </td>
+                                <td>
+                                    <span data-bs-toggle="tooltip" title="{{ reservation.clients_names }}">
+                                        {{ reservation.clients_names|truncatewords:3 }}
+                                    </span>
+                                </td>
+                                <td>{{ reservation.hotel }}</td>
+                                <td>
+                                    <span class="badge bg-light text-dark">{{ reservation.date_from }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-light text-dark">{{ reservation.date_to }}</span>
+                                </td>
+                                <td>
+                                    {% if reservation.status == 'OK' %}
+                                        <span class="status-confirmed">
+                                            <i class="bi bi-check-circle-fill"></i> Confirmada
+                                        </span>
+                                    {% elif reservation.status == 'CXX' %}
+                                        <span class="status-cancelled">
+                                            <i class="bi bi-x-circle-fill"></i> Cancelada
+                                        </span>
+                                    {% else %}
+                                        <span class="status-pending">
+                                            <i class="bi bi-clock-fill"></i> Pendiente
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <a href="{% url 'reservations:detail' reservation.pk %}" 
+                                           class="btn btn-outline-primary" 
+                                           data-bs-toggle="tooltip" 
+                                           title="Ver detalles">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a href="{% url 'reservations:update' reservation.pk %}" 
+                                           class="btn btn-outline-warning" 
+                                           data-bs-toggle="tooltip" 
+                                           title="Editar">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <a href="{% url 'reservations:delete' reservation.pk %}" 
+                                           class="btn btn-outline-danger" 
+                                           data-bs-toggle="tooltip" 
+                                           title="Eliminar">
+                                            <i class="bi bi-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="7" class="text-center py-4">
+                                    <div class="text-muted">
+                                        <i class="bi bi-inbox display-4"></i>
+                                        <h5 class="mt-2">No hay reservas registradas</h5>
+                                        <p class="mb-3">Comienza creando tu primera reserva en el sistema.</p>
+                                        <a href="{% url 'reservations:create' %}" class="btn btn-primary">
+                                            <i class="bi bi-plus-circle"></i> Crear Primera Reserva
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                {% if page_obj.paginator.num_pages > 1 %}
+                <nav aria-label="Page navigation" class="p-3 border-top">
+                    <ul class="pagination justify-content-center mb-0">
+                        {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" 
+                               href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                <i class="bi bi-chevron-double-left"></i>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" 
+                               href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                <i class="bi bi-chevron-left"></i>
+                            </a>
+                        </li>
+                        {% endif %}
+
+                        <li class="page-item active">
+                            <span class="page-link">
+                                Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+                            </span>
+                        </li>
+
+                        {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" 
+                               href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                <i class="bi bi-chevron-right"></i>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" 
+                               href="?page={{ page_obj.paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                <i class="bi bi-chevron-double-right"></i>
+                            </a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
