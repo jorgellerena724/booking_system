@@ -1,0 +1,43 @@
+SISTEMA DE RESERVAS HOTELERAS - VERSIÓN PORTABLE
+=================================================
+
+🎯 CARACTERÍSTICAS:
+✅ Aplicación completa auto-contenida
+✅ No requiere instalación de Python
+✅ Base de datos incluida con datos de demo
+✅ Funciona completamente offline
+✅ Todas las funcionalidades incluidas
+
+🚀 INSTRUCCIONES DE USO:
+1. Extraer TODOS los archivos en una carpeta
+2. Doble clic en "SistemaReservas.exe"
+3. Esperar a que se abra el navegador automáticamente
+4. Si no se abre, acceder manualmente a: http://127.0.0.1:9000
+
+🔐 CREDENCIALES DE ACCESO:
+- Usuario: admin
+- Contraseña: maXS@sdasd1234
+- Se recomienda cambiar la contraseña después del primer login
+
+📊 FUNCIONALIDADES INCLUIDAS:
+• Gestión completa de reservas (Crear, Editar, Eliminar)
+• Búsqueda avanzada con múltiples filtros
+• Exportación a Excel y PDF
+• Dashboard con estadísticas y gráficos
+• Sistema seguro de autenticación
+
+🛑 PARA CERRAR LA APLICACIÓN:
+- Cerrar la ventana de consola negra
+- O presionar CTRL+C en la consola
+
+📝 DATOS DE DEMOSTRACIÓN:
+La aplicación incluye reservas de ejemplo para probar todas las funcionalidades.
+
+⚠️ NOTAS IMPORTANTES:
+• La aplicación usa el puerto 9000 (http://127.0.0.1:9000)
+• Los datos se guardan localmente en db.sqlite3
+• No requiere conexión a internet
+• Compatible con Windows 10/11
+
+📞 SOPORTE:
+Para cualquier problema, contactar al administrador del sistema.

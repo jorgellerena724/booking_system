@@ -24,3 +24,7 @@ Thumbs.db
 
 # Static files
 staticfiles/
+
+# Exe
+dist/
+build/
