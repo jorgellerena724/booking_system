@@ -26,7 +26,9 @@
         <p><strong>Check-in:</strong> {{ reservation.date_from }}</p>
         <p><strong>Check-out:</strong> {{ reservation.date_to }}</p>
         <p><strong>Confirmación Hotel:</strong> {{ reservation.hotel_confirmation|default:"Pendiente" }}</p>
-        <p><strong>PAX:</strong> {{ reservation.pax }}</p>
+        <p><strong>PAX Adultos:</strong> {{ reservation.pax_ad }}</p>
+        <p><strong>PAX Niños:</strong> {{ reservation.pax_chd }}</p>
+        <p><strong>Total PAX:</strong> {{ reservation.total_pax }}</p>
         <p><strong>Tipo de Habitación:</strong> {{ reservation.room_type }}</p>
     </div>
 </div>
@@ -45,6 +47,7 @@
     
     <div>
         <h3>Información Adicional</h3>
+        <p><strong>Plan de Comidas:</strong> {{ reservation.meal_plan|default:"No especificado" }}</p>
         <p><strong>Tarifas Válidas:</strong> {{ reservation.valid_rates|default:"N/A" }}</p>
         <p><strong>Nacionalidad:</strong> {{ reservation.nationality }}</p>
         <p><strong>Observaciones:</strong> {{ reservation.remarks|default:"Ninguna" }}</p>

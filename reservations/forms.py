@@ -7,7 +7,7 @@ class ReservationForm(forms.ModelForm):
         fields = [
             'status', 'agency', 'booking_code', 'clients_names',
             'hotel', 'date_from', 'date_to', 'hotel_confirmation',
-            'pax', 'room_type', 'sale_price', 'touch_cost',
+            'pax_ad', 'pax_chd', 'room_type', 'meal_plan', 'sale_price', 'touch_cost',
             'valid_rates', 'nationality', 'remarks'
         ]
         widgets = {
@@ -15,6 +15,7 @@ class ReservationForm(forms.ModelForm):
             'date_to': forms.DateInput(attrs={'type': 'date'}),
             'clients_names': forms.Textarea(attrs={'rows': 2}),
             'valid_rates': forms.Textarea(attrs={'rows': 2}),
+            'meal_plan': forms.Textarea(attrs={'rows': 2}),
             'remarks': forms.Textarea(attrs={'rows': 3}),
         }
 

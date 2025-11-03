@@ -13,4 +13,8 @@ urlpatterns = [
     path('export/excel/', views.export_reservations_excel, name='export_excel'),
     path('export/pdf/', views.export_reservations_pdf, name='export_pdf'),
     path('dashboard/', views.dashboard, name='dashboard'),
+    path('financial-debug/', views.financial_debug, name='financial_debug'),
+    path('recalculate-margins/', views.recalculate_margins, name='recalculate_margins'),
+    path('dashboard/export-pdf/', views.export_dashboard_pdf, name='export_dashboard_pdf'),
+    path('dashboard/export-excel/', views.export_dashboard_excel, name='export_dashboard_excel')
 ]

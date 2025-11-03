@@ -39,11 +39,28 @@
                         </div>
                     </div>
                     <div class="col-md-6 text-end">
+                        <!-- Ordenamiento -->
+                        <div class="btn-group me-3">
+                            <button type="button" class="btn btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown">
+                                <i class="bi bi-sort-down"></i> Ordenar por
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item {% if current_order == 'date_from' %}active{% endif %}" 
+                                      href="?order_by=date_from">Check-in (Ascendente)</a></li>
+                                <li><a class="dropdown-item {% if current_order == '-date_from' %}active{% endif %}" 
+                                      href="?order_by=-date_from">Check-in (Descendente)</a></li>
+                                <li><a class="dropdown-item {% if current_order == 'created_at' %}active{% endif %}" 
+                                      href="?order_by=created_at">Fecha Creación (Asc)</a></li>
+                                <li><a class="dropdown-item {% if current_order == '-created_at' %}active{% endif %}" 
+                                      href="?order_by=-created_at">Fecha Creación (Desc)</a></li>
+                            </ul>
+                        </div>
+                        
                         <div class="btn-group">
-                            <a href="?export=excel" class="btn export-btn text-white">
+                            <a href="?export=excel{% if current_order %}&order_by={{ current_order }}{% endif %}" class="btn export-btn text-white">
                                 <i class="bi bi-file-earmark-excel"></i> Exportar Excel
                             </a>
-                            <a href="?export=pdf" class="btn btn-danger">
+                            <a href="?export=pdf{% if current_order %}&order_by={{ current_order }}{% endif %}" class="btn btn-danger">
                                 <i class="bi bi-file-earmark-pdf"></i> Exportar PDF
                             </a>
                         </div>
@@ -60,6 +77,14 @@
             <div class="card-header">
                 <h5 class="card-title mb-0">
                     <i class="bi bi-table"></i> Lista Completa de Reservas
+                    {% if current_order %}
+                    <small class="text-muted">(Ordenado por 
+                        {% if current_order == 'date_from' %}Check-in Ascendente{% endif %}
+                        {% if current_order == '-date_from' %}Check-in Descendente{% endif %}
+                        {% if current_order == 'created_at' %}Fecha Creación Ascendente{% endif %}
+                        {% if current_order == '-created_at' %}Fecha Creación Descendente{% endif %}
+                    )</small>
+                    {% endif %}
                 </h5>
             </div>
             <div class="card-body p-0">
@@ -72,6 +97,7 @@
                                 <th><i class="bi bi-building"></i> Hotel</th>
                                 <th><i class="bi bi-calendar-check"></i> Check-in</th>
                                 <th><i class="bi bi-calendar-x"></i> Check-out</th>
+                                <th><i class="bi bi-people"></i> PAX</th>
                                 <th><i class="bi bi-info-circle"></i> Estado</th>
                                 <th><i class="bi bi-gear"></i> Acciones</th>
                             </tr>
@@ -93,6 +119,12 @@
                                 </td>
                                 <td>
                                     <span class="badge bg-light text-dark">{{ reservation.date_to }}</span>
+                                </td>
+                                <td>
+                                    <small>
+                                        <span class="badge bg-primary">AD: {{ reservation.pax_ad }}</span>
+                                        <span class="badge bg-info">CHD: {{ reservation.pax_chd }}</span>
+                                    </small>
                                 </td>
                                 <td>
                                     {% if reservation.status == 'OK' %}
@@ -134,7 +166,7 @@
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="7" class="text-center py-4">
+                                <td colspan="8" class="text-center py-4">
                                     <div class="text-muted">
                                         <i class="bi bi-inbox display-4"></i>
                                         <h5 class="mt-2">No hay reservas registradas</h5>
@@ -157,13 +189,13 @@
                         {% if page_obj.has_previous %}
                         <li class="page-item">
                             <a class="page-link" 
-                               href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                               href="?page=1{% if current_order %}&order_by={{ current_order }}{% endif %}{% for key, value in request.GET.items %}{% if key != 'page' and key != 'order_by' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
                                 <i class="bi bi-chevron-double-left"></i>
                             </a>
                         </li>
                         <li class="page-item">
                             <a class="page-link" 
-                               href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                               href="?page={{ page_obj.previous_page_number }}{% if current_order %}&order_by={{ current_order }}{% endif %}{% for key, value in request.GET.items %}{% if key != 'page' and key != 'order_by' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
                                 <i class="bi bi-chevron-left"></i>
                             </a>
                         </li>
@@ -178,13 +210,13 @@
                         {% if page_obj.has_next %}
                         <li class="page-item">
                             <a class="page-link" 
-                               href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                               href="?page={{ page_obj.next_page_number }}{% if current_order %}&order_by={{ current_order }}{% endif %}{% for key, value in request.GET.items %}{% if key != 'page' and key != 'order_by' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
                                 <i class="bi bi-chevron-right"></i>
                             </a>
                         </li>
                         <li class="page-item">
                             <a class="page-link" 
-                               href="?page={{ page_obj.paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                               href="?page={{ page_obj.paginator.num_pages }}{% if current_order %}&order_by={{ current_order }}{% endif %}{% for key, value in request.GET.items %}{% if key != 'page' and key != 'order_by' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
                                 <i class="bi bi-chevron-double-right"></i>
                             </a>
                         </li>

@@ -4,235 +4,242 @@
     <meta charset="utf-8">
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: Helvetica, Arial, sans-serif;
             font-size: 12px;
             line-height: 1.4;
-            color: #333;
             margin: 0;
-            padding: 20px;
+            padding: 0;
         }
-        
         .header {
             text-align: center;
-            border-bottom: 2px solid #3498db;
-            padding-bottom: 15px;
             margin-bottom: 20px;
+            border-bottom: 2px solid #333;
+            padding-bottom: 10px;
         }
-        
         .header h1 {
-            color: #2c3e50;
+            color: #333;
             margin: 0;
-            font-size: 24px;
+            font-size: 18px;
         }
-        
-        .header .subtitle {
-            color: #7f8c8d;
-            font-size: 14px;
-            margin: 5px 0;
+        .reservation-card {
+            border: 1px solid #ddd;
+            margin-bottom: 15px;
+            padding: 12px;
+            background: #fafafa;
         }
-        
-        .summary {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 5px;
-            margin-bottom: 20px;
-            border-left: 4px solid #3498db;
+        .reservation-header {
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #ccc;
         }
-        
-        .summary-grid {
-            display: table;
-            width: 100%;
+        .booking-code {
+            font-size: 16px;
+            font-weight: bold;
+            color: #2c5aa0;
+            float: left;
+        }
+        .status {
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-weight: bold;
+            font-size: 11px;
+            float: right;
+        }
+        .status-confirmed { background: #d4edda; color: #155724; }
+        .status-cancelled { background: #f8d7da; color: #721c24; }
+        .status-pending { background: #fff3cd; color: #856404; }
+        .clearfix {
+            clear: both;
+        }
+        .reservation-details {
             margin-top: 10px;
         }
-        
-        .summary-row {
-            display: table-row;
+        .detail-row {
+            margin-bottom: 5px;
+            display: block;
         }
-        
-        .summary-item {
-            display: table-cell;
-            text-align: center;
-            padding: 10px;
-            width: 33%;
-        }
-        
-        .summary-value {
-            font-size: 18px;
+        .detail-label {
             font-weight: bold;
-            color: #2c3e50;
+            color: #555;
+            display: inline-block;
+            width: 150px;
         }
-        
-        .summary-label {
-            font-size: 11px;
-            color: #7f8c8d;
-            text-transform: uppercase;
+        .detail-value {
+            color: #333;
+            display: inline-block;
         }
-        
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 20px 0;
-            font-size: 10px;
-        }
-        
-        th {
-            background-color: #34495e;
-            color: white;
+        .financial-info {
+            background: #e8f4fd;
             padding: 8px;
-            text-align: left;
-            border: 1px solid #ddd;
+            border-radius: 3px;
+            margin-top: 10px;
+            margin-bottom: 10px;
         }
-        
-        td {
-            padding: 6px;
-            border: 1px solid #ddd;
+        .financial-row {
+            margin-bottom: 3px;
         }
-        
-        tr:nth-child(even) {
-            background-color: #f8f9fa;
+        .summary {
+            background: #e9ecef;
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 5px;
         }
-        
-        .status-confirmed {
-            color: #27ae60;
-            font-weight: bold;
-        }
-        
-        .status-cancelled {
-            color: #e74c3c;
-            font-weight: bold;
-        }
-        
-        .status-pending {
-            color: #f39c12;
-            font-weight: bold;
-        }
-        
-        .footer {
-            margin-top: 30px;
-            padding-top: 15px;
-            border-top: 1px solid #ddd;
-            font-size: 10px;
-            color: #7f8c8d;
-            text-align: center;
-        }
-        
         .filters-info {
             background: #fff3cd;
-            padding: 10px;
+            padding: 8px;
+            margin-bottom: 12px;
             border-radius: 3px;
-            margin: 10px 0;
-            border-left: 4px solid #ffc107;
-            font-size: 11px;
         }
-        
-        .profit-positive {
-            color: #27ae60;
+        .footer {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 10px;
+            color: #666;
+            border-top: 1px solid #ddd;
+            padding-top: 10px;
         }
-        
-        .profit-negative {
-            color: #e74c3c;
-        }
-        
         .page-break {
-            page-break-after: always;
+            page-break-before: always;
         }
     </style>
 </head>
 <body>
     <div class="header">
-        <h1>Reporte de Reservas Hoteleras</h1>
-        <div class="subtitle">Sistema de Gestión de Reservas</div>
-        <div class="subtitle">Generado: {{ generated_date }}</div>
+        <h1>Reporte de Reservas - Sistema de Reservas Hoteleras</h1>
+        <p>Generado: {{ generated_date }}</p>
     </div>
 
     {% if filters_applied %}
     <div class="filters-info">
-        <strong>Filtros aplicados:</strong>
-        {% if request_params.search_text %} • Texto: "{{ request_params.search_text }}"{% endif %}
-        {% if request_params.agency %} • Agencia: "{{ request_params.agency }}"{% endif %}
-        {% if request_params.hotel %} • Hotel: "{{ request_params.hotel }}"{% endif %}
-        {% if request_params.status %} • Estado: "{{ request_params.status }}"{% endif %}
-        {% if request_params.date_from %} • Desde: {{ request_params.date_from }}{% endif %}
-        {% if request_params.date_to %} • Hasta: {{ request_params.date_to }}{% endif %}
-        {% if request_params.nationality %} • Nacionalidad: "{{ request_params.nationality }}"{% endif %}
-        {% if request_params.room_type %} • Tipo habitación: "{{ request_params.room_type }}"{% endif %}
+        <strong>Filtros aplicados:</strong><br>
+        {% if request.GET.search_text %} • Texto: "{{ request.GET.search_text }}"{% endif %}
+        {% if request.GET.agency %} • Agencia: "{{ request.GET.agency }}"{% endif %}
+        {% if request.GET.hotel %} • Hotel: "{{ request.GET.hotel }}"{% endif %}
+        {% if request.GET.status %} • Estado: "{{ request.GET.status }}"{% endif %}
+        {% if request.GET.nationality %} • Nacionalidad: "{{ request.GET.nationality }}"{% endif %}
+        {% if request.GET.room_type %} • Tipo habitación: "{{ request.GET.room_type }}"{% endif %}
+        {% if request.GET.date_from %} • Fecha desde: "{{ request.GET.date_from }}"{% endif %}
+        {% if request.GET.date_to %} • Fecha hasta: "{{ request.GET.date_to }}"{% endif %}
     </div>
     {% endif %}
 
     <div class="summary">
-        <h3 style="margin: 0 0 10px 0; color: #2c3e50;">Resumen Ejecutivo</h3>
-        <div class="summary-grid">
-            <div class="summary-row">
-                <div class="summary-item">
-                    <div class="summary-value">{{ total_reservations }}</div>
-                    <div class="summary-label">Total Reservas</div>
+        <strong>Resumen del Reporte:</strong><br>
+        • Total de reservas encontradas: {{ total_reservations }}<br>
+        • Ingresos totales (excluye canceladas): ${{ total_revenue|floatformat:2 }}<br>
+        • Ganancia neta: ${{ total_profit|floatformat:2 }}
+    </div>
+
+    {% for reservation in reservations %}
+    <div class="reservation-card">
+        <div class="reservation-header">
+            <div class="booking-code">{{ reservation.booking_code }}</div>
+            <div class="status 
+                {% if reservation.status == 'OK' %}status-confirmed{% endif %}
+                {% if reservation.status == 'CXX' %}status-cancelled{% endif %}
+                {% if reservation.status == 'PENDING' %}status-pending{% endif %}">
+                {% if reservation.status == 'OK' %}CONFIRMADA{% endif %}
+                {% if reservation.status == 'CXX' %}CANCELADA{% endif %}
+                {% if reservation.status == 'PENDING' %}PENDIENTE{% endif %}
+            </div>
+            <div class="clearfix"></div>
+        </div>
+        
+        <div class="reservation-details">
+            <!-- Información General -->
+            <div class="detail-row">
+                <span class="detail-label">Agencia:</span>
+                <span class="detail-value">{{ reservation.agency }}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Clientes:</span>
+                <span class="detail-value">{{ reservation.clients_names }}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Hotel:</span>
+                <span class="detail-value">{{ reservation.hotel }}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Confirmación Hotel:</span>
+                <span class="detail-value">{{ reservation.hotel_confirmation|default:"Pendiente" }}</span>
+            </div>
+            
+            <!-- Fechas y Pasajeros -->
+            <div class="detail-row">
+                <span class="detail-label">Check-in:</span>
+                <span class="detail-value">{{ reservation.date_from }}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Check-out:</span>
+                <span class="detail-value">{{ reservation.date_to }}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Pasajeros:</span>
+                <span class="detail-value">{{ reservation.pax_ad }} AD + {{ reservation.pax_chd }} CHD = {{ reservation.total_pax }} total</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Tipo Habitación:</span>
+                <span class="detail-value">{{ reservation.room_type }}</span>
+            </div>
+            
+            <!-- Información Financiera -->
+            <div class="financial-info">
+                <div class="financial-row">
+                    <span class="detail-label">Precio Venta:</span>
+                    <span class="detail-value">${{ reservation.sale_price }}</span>
                 </div>
-                <div class="summary-item">
-                    <div class="summary-value">${{ total_revenue|floatformat:2 }}</div>
-                    <div class="summary-label">Ingresos Totales</div>
+                <div class="financial-row">
+                    <span class="detail-label">Costo:</span>
+                    <span class="detail-value">${{ reservation.touch_cost }}</span>
                 </div>
-                <div class="summary-item">
-                    <div class="summary-value">${{ total_profit|floatformat:2 }}</div>
-                    <div class="summary-label">Ganancia Neta</div>
+                <div class="financial-row">
+                    <span class="detail-label">Margen:</span>
+                    <span class="detail-value">
+                        {% if reservation.profit_percentage %}
+                            {{ reservation.profit_percentage|floatformat:2 }}%
+                        {% else %}
+                            0%
+                        {% endif %}
+                    </span>
                 </div>
+            </div>
+            
+            <!-- Información Adicional -->
+            <div class="detail-row">
+                <span class="detail-label">Plan de Comidas:</span>
+                <span class="detail-value">{{ reservation.meal_plan|default:"No especificado" }}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Nacionalidad:</span>
+                <span class="detail-value">{{ reservation.nationality }}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Tarifas Válidas:</span>
+                <span class="detail-value">{{ reservation.valid_rates|default:"No especificado" }}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Observaciones:</span>
+                <span class="detail-value">{{ reservation.remarks|default:"Ninguna" }}</span>
             </div>
         </div>
     </div>
-
-    <table>
-        <thead>
-            <tr>
-                <th>Código</th>
-                <th>Cliente</th>
-                <th>Hotel</th>
-                <th>Check-in</th>
-                <th>Check-out</th>
-                <th>Estado</th>
-                <th>PAX</th>
-                <th>Precio Venta</th>
-                <th>Costo</th>
-                <th>Profit %</th>
-                <th>Agencia</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for reservation in reservations %}
-            <tr>
-                <td><strong>{{ reservation.booking_code }}</strong></td>
-                <td>{{ reservation.clients_names|truncatewords:2 }}</td>
-                <td>{{ reservation.hotel|truncatewords:2 }}</td>
-                <td>{{ reservation.date_from }}</td>
-                <td>{{ reservation.date_to }}</td>
-                <td>
-                    {% if reservation.status == 'OK' %}
-                        <span class="status-confirmed">Confirmada</span>
-                    {% elif reservation.status == 'CXX' %}
-                        <span class="status-cancelled">Cancelada</span>
-                    {% else %}
-                        <span class="status-pending">Pendiente</span>
-                    {% endif %}
-                </td>
-                <td style="text-align: center;">{{ reservation.pax }}</td>
-                <td style="text-align: right;">${{ reservation.sale_price|floatformat:2 }}</td>
-                <td style="text-align: right;">${{ reservation.touch_cost|floatformat:2 }}</td>
-                <td style="text-align: right;" class="{% if reservation.profit_percentage > 0 %}profit-positive{% else %}profit-negative{% endif %}">
-                    {{ reservation.profit_percentage|floatformat:2 }}%
-                </td>
-                <td>{{ reservation.agency|truncatewords:1 }}</td>
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="11" style="text-align: center; padding: 20px; color: #7f8c8d;">
-                    No se encontraron reservas con los criterios especificados
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    
+    <!-- Insertar salto de página cada 4 reservas -->
+    {% if forloop.counter|divisibleby:4 and not forloop.last %}
+    <div style="page-break-before: always;"></div>
+    {% endif %}
+    
+    {% empty %}
+    <div class="reservation-card">
+        <p style="text-align: center; color: #666; font-style: italic;">
+            No se encontraron reservas con los filtros aplicados.
+        </p>
+    </div>
+    {% endfor %}
 
     <div class="footer">
-        <p>Reporte generado automáticamente por el Sistema de Gestión de Reservas</p>
-        <p>© {{ generated_date|slice:":4" }} - Todos los derechos reservados</p>
+        <p>Reporte generado automáticamente por el Sistema de Reservas Hoteleras</p>
+        <p>Total de reservas en el reporte: {{ reservations.count }}</p>
     </div>
 </body>
 </html>

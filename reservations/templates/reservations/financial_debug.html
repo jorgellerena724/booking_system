@@ -1,0 +1,177 @@
+{% extends 'reservations/base.html' %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mb-4">🔍 Diagnóstico Financiero</h2>
+
+    <!-- Resumen General -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card {% if total_profit < 0 %}bg-danger{% else %}bg-success{% endif %} text-white">
+                <div class="card-body">
+                    <h5>Ganancia Neta</h5>
+                    <h3>${{ total_profit|floatformat:2 }}</h3>
+                    <small>Revenue: ${{ total_revenue|floatformat:2 }}</small><br>
+                    <small>Cost: ${{ total_cost|floatformat:2 }}</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h5>Margen Global</h5>
+                    <h3>{{ profit_margin_percentage|floatformat:2 }}%</h3>
+                    <small>Dashboard: {{ dashboard_margin|floatformat:2 }}%</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card {% if negative_profit_count > 0 %}bg-warning{% else %}bg-primary{% endif %} text-white">
+                <div class="card-body">
+                    <h5>Reservas Problemáticas</h5>
+                    <h3>{{ negative_profit_count }}</h3>
+                    <small>De {{ total_active_reservations }} activas</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reservas con Ganancia Negativa -->
+    {% if negative_profit_reservations %}
+    <div class="card mb-4">
+        <div class="card-header bg-warning">
+            <h5 class="mb-0">⚠️ Reservas con Ganancia Negativa (Costo > Venta)</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Booking Code</th>
+                            <th>Hotel</th>
+                            <th>Venta</th>
+                            <th>Costo</th>
+                            <th>Pérdida</th>
+                            <th>Margen %</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for res in negative_profit_reservations %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'reservations:detail' res.pk %}">{{ res.booking_code }}</a>
+                            </td>
+                            <td>{{ res.hotel|truncatewords:2 }}</td>
+                            <td>${{ res.sale_price|floatformat:2 }}</td>
+                            <td>${{ res.touch_cost|floatformat:2 }}</td>
+                            <td class="text-danger">
+                                ${{ res.sale_price|floatformat:2 }} - ${{ res.touch_cost|floatformat:2 }} = 
+                                -${{ res.touch_cost|add:res.sale_price|floatformat:2 }}
+                            </td>
+                            <td class="text-danger">{{ res.profit_percentage|floatformat:2 }}%</td>
+                            <td>
+                                <span class="badge {% if res.status == 'OK' %}bg-success{% else %}bg-warning{% endif %}">
+                                    {{ res.get_status_display }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="alert alert-success">
+        ✅ No hay reservas con ganancia negativa (costo mayor que venta).
+    </div>
+    {% endif %}
+
+    <!-- Análisis Detallado de Márgenes -->
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">📊 Análisis Detallado de Márgenes ({{ margin_data|length }} reservas)</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-sm table-striped">
+                    <thead>
+                        <tr>
+                            <th>Booking Code</th>
+                            <th>Venta</th>
+                            <th>Costo</th>
+                            <th>Margen DB</th>
+                            <th>Margen Calc</th>
+                            <th>Diferencia</th>
+                            <th>Problema</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for data in margin_data %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'reservations:detail' data.reservation.pk %}">
+                                    {{ data.reservation.booking_code }}
+                                </a>
+                            </td>
+                            <td>${{ data.sale_price|floatformat:2 }}</td>
+                            <td>${{ data.touch_cost|floatformat:2 }}</td>
+                            <td>{{ data.stored_margin|floatformat:2 }}%</td>
+                            <td>{{ data.manual_margin|floatformat:2 }}%</td>
+                            <td class="{% if data.difference > 0.1 or data.difference < -0.1 %}text-warning fw-bold{% endif %}">
+                                {{ data.difference|floatformat:2 }}%
+                            </td>
+                            <td>
+                                {% if data.sale_price < data.touch_cost %}
+                                    <span class="badge bg-danger">Costo > Venta</span>
+                                {% elif data.difference > 0.1 %}
+                                    <span class="badge bg-warning">+{{ data.difference|floatformat:2 }}%</span>
+                                {% elif data.difference < -0.1 %}
+                                    <span class="badge bg-warning">{{ data.difference|floatformat:2 }}%</span>
+                                {% else %}
+                                    <span class="badge bg-success">OK</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Resumen de Problemas -->
+    <div class="card mt-4">
+        <div class="card-header bg-secondary text-white">
+            <h5 class="mb-0">📈 Resumen de Problemas Identificados</h5>
+        </div>
+        <div class="card-body">
+            <ul>
+                <li><strong>Reservas con costo mayor a venta:</strong> {{ negative_profit_count }}</li>
+                <li><strong>Ganancia neta total:</strong> ${{ total_profit|floatformat:2 }}</li>
+                <li><strong>Margen global real:</strong> {{ profit_margin_percentage|floatformat:2 }}%</li>
+                <li><strong>Margen del dashboard:</strong> {{ dashboard_margin|floatformat:2 }}%</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Acciones -->
+    <div class="card mt-4">
+        <div class="card-body">
+            <h5>🛠️ Acciones Correctivas</h5>
+            <div class="btn-group">
+                <a href="{% url 'reservations:recalculate_margins' %}" class="btn btn-warning">
+                    🔄 Recalcular Todos los Márgenes
+                </a>
+                <a href="{% url 'reservations:dashboard' %}" class="btn btn-primary">
+                    📊 Volver al Dashboard
+                </a>
+            </div>
+            <p class="text-muted mt-2 small">
+                <strong>Recalcular márgenes:</strong> Esto ejecutará el método save() en todas las reservas para recalcular los profit_percentage.
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

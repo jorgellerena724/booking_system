@@ -4,22 +4,34 @@
 <div class="row">
     <div class="col-12">
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2 class="mb-0">
-                <i class="bi bi-speedometer2 text-primary"></i> Dashboard de Reservas
-            </h2>
-            
-            <!-- Filtros de fecha -->
-            <form method="get" class="d-flex gap-2">
-                <input type="date" name="date_from" value="{{ date_from|default:'' }}" class="form-control" placeholder="Desde">
-                <input type="date" name="date_to" value="{{ date_to|default:'' }}" class="form-control" placeholder="Hasta">
-                <button type="submit" class="btn btn-primary">
-                    <i class="bi bi-filter"></i> Filtrar
-                </button>
-                <a href="{% url 'reservations:dashboard' %}" class="btn btn-outline-secondary">
-                    <i class="bi bi-arrow-clockwise"></i>
-                </a>
-            </form>
-        </div>
+    <h2 class="mb-0">
+        <i class="bi bi-speedometer2 text-primary"></i> Dashboard de Reservas
+    </h2>
+    
+    <div class="btn-group">
+        <!-- Filtros de fecha -->
+        <form method="get" class="d-flex gap-2 me-3">
+            <input type="date" name="date_from" value="{{ date_from|default:'' }}" class="form-control" placeholder="Desde">
+            <input type="date" name="date_to" value="{{ date_to|default:'' }}" class="form-control" placeholder="Hasta">
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-filter"></i> Filtrar
+            </button>
+            <a href="{% url 'reservations:dashboard' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-clockwise"></i>
+            </a>
+        </form>
+        
+        <!-- Botones de exportación -->
+        <a href="{% url 'reservations:export_dashboard_pdf' %}?{{ request.GET.urlencode }}" 
+           class="btn btn-danger">
+            <i class="bi bi-file-pdf"></i> PDF
+        </a>
+        <a href="{% url 'reservations:export_dashboard_excel' %}?{{ request.GET.urlencode }}" 
+           class="btn btn-success">
+            <i class="bi bi-file-excel"></i> Excel
+        </a>
+    </div>
+</div>
 
         <!-- Métricas Principales -->
         <div class="row mb-4">
@@ -31,6 +43,7 @@
                             <div>
                                 <h6 class="card-title">Ingresos Totales</h6>
                                 <h3 class="mb-0">${{ total_revenue|floatformat:2 }}</h3>
+                                <small class="opacity-75">Excluye canceladas</small>
                             </div>
                             <div class="align-self-center">
                                 <i class="bi bi-currency-dollar display-6"></i>
@@ -47,6 +60,7 @@
                             <div>
                                 <h6 class="card-title">Ganancia Neta</h6>
                                 <h3 class="mb-0">${{ total_profit|floatformat:2 }}</h3>
+                                <small class="opacity-75">Excluye canceladas</small>
                             </div>
                             <div class="align-self-center">
                                 <i class="bi bi-graph-up display-6"></i>
@@ -63,6 +77,7 @@
                             <div>
                                 <h6 class="card-title">Margen Promedio</h6>
                                 <h3 class="mb-0">{{ avg_profit_percentage|floatformat:2 }}%</h3>
+                                <small class="opacity-75">Excluye canceladas</small>
                             </div>
                             <div class="align-self-center">
                                 <i class="bi bi-percent display-6"></i>
@@ -73,15 +88,87 @@
             </div>
             
             <div class="col-md-3 mb-3">
+                <div class="card bg-danger text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6 class="card-title">Tasa de Cancelación</h6>
+                                <h3 class="mb-0">{{ cancellation_rate|floatformat:1 }}%</h3>
+                                <small class="opacity-75">{{ cancelled_reservations }} de {{ total_reservations }}</small>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="bi bi-x-circle display-6"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Segunda fila de métricas -->
+        <div class="row mb-4">
+            <div class="col-md-3 mb-3">
                 <div class="card bg-warning text-dark">
                     <div class="card-body">
                         <div class="d-flex justify-content-between">
                             <div>
                                 <h6 class="card-title">Total Reservas</h6>
                                 <h3 class="mb-0">{{ total_reservations }}</h3>
+                                <small class="text-muted">Todas las reservas</small>
                             </div>
                             <div class="align-self-center">
                                 <i class="bi bi-calendar-check display-6"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-3 mb-3">
+                <div class="card bg-secondary text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6 class="card-title">Reservas Activas</h6>
+                                <h3 class="mb-0">{{ active_reservations_count }}</h3>
+                                <small class="opacity-75">Confirmadas + Pendientes</small>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="bi bi-check-circle display-6"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-3 mb-3">
+                <div class="card bg-dark text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6 class="card-title">Canceladas</h6>
+                                <h3 class="mb-0">{{ cancelled_reservations }}</h3>
+                                <small class="opacity-75">Reservas canceladas</small>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="bi bi-x-octagon display-6"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-3 mb-3">
+                <div class="card bg-light text-dark">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6 class="card-title">Costo Total</h6>
+                                <h3 class="mb-0">${{ total_cost|floatformat:2 }}</h3>
+                                <small class="text-muted">Excluye canceladas</small>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="bi bi-currency-dollar display-6"></i>
                             </div>
                         </div>
                     </div>
@@ -184,7 +271,7 @@
                                 {% else %}
                                     <i class="bi bi-clock-fill text-warning"></i>
                                 {% endif %}
-                                {{ status.status }}
+                                {{ status.get_status_display }}
                             </span>
                             <strong>{{ status.count }}</strong>
                         </div>
