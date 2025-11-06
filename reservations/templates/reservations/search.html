@@ -50,6 +50,17 @@
                         <label class="form-label">Tipo de habitación</label>
                         <input type="text" name="room_type" value="{{ request.GET.room_type|default:'' }}" class="form-control">
                     </div>
+                    
+                    <!-- NUEVO: Filtro para Confirmación Hotel -->
+                    <div class="col-md-6">
+                        <label class="form-label">Confirmación Hotel</label>
+                        <select name="hotel_confirmation" class="form-select">
+                            <option value="">Todos</option>
+                            <option value="sin_confirmar" {% if request.GET.hotel_confirmation == 'sin_confirmar' %}selected{% endif %}>Sin Confirmar</option>
+                            <option value="confirmadas" {% if request.GET.hotel_confirmation == 'confirmadas' %}selected{% endif %}>Confirmadas</option>
+                        </select>
+                    </div>
+                    
                     <div class="col-md-6">
                         <label class="form-label">Fecha desde</label>
                         <input type="date" name="date_from" value="{{ request.GET.date_from|default:'' }}" class="form-control">
@@ -104,15 +115,21 @@
                                 <th><i class="bi bi-building"></i> Hotel</th>
                                 <th><i class="bi bi-calendar-check"></i> Check-in</th>
                                 <th><i class="bi bi-calendar-x"></i> Check-out</th>
+                                <th><i class="bi bi-building-check"></i> Confirmación</th>
                                 <th><i class="bi bi-info-circle"></i> Estado</th>
                                 <th><i class="bi bi-gear"></i> Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for reservation in page_obj %}
-                            <tr>
+                            <tr class="{% if not reservation.hotel_confirmation and reservation.status != 'CXX' %}table-info{% endif %}">
                                 <td>
                                     <strong class="text-primary">{{ reservation.booking_code }}</strong>
+                                    {% if not reservation.hotel_confirmation and reservation.status != 'CXX' %}
+                                    <span class="badge bg-info text-dark ms-1" data-bs-toggle="tooltip" title="Falta confirmación hotel">
+                                        <i class="bi bi-building"></i>
+                                    </span>
+                                    {% endif %}
                                 </td>
                                 <td>
                                     <span data-bs-toggle="tooltip" title="{{ reservation.clients_names }}">
@@ -125,6 +142,17 @@
                                 </td>
                                 <td>
                                     <span class="badge bg-light text-dark">{{ reservation.date_to }}</span>
+                                </td>
+                                <td>
+                                    {% if not reservation.hotel_confirmation and reservation.status != 'CXX' %}
+                                        <span class="badge bg-info text-dark">
+                                            <i class="bi bi-exclamation-circle"></i> Pendiente
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-success">
+                                            {{ reservation.hotel_confirmation|default:"Confirmada" }}
+                                        </span>
+                                    {% endif %}
                                 </td>
                                 <td>
                                     {% if reservation.status == 'OK' %}
@@ -152,7 +180,7 @@
                                         <a href="{% url 'reservations:update' reservation.pk %}" 
                                            class="btn btn-outline-warning" 
                                            data-bs-toggle="tooltip" 
-                                           title="Editar">
+                                           title="Editar{% if not reservation.hotel_confirmation and reservation.status != 'CXX' %} - Agregar confirmación{% endif %}">
                                             <i class="bi bi-pencil"></i>
                                         </a>
                                     </div>
@@ -160,7 +188,7 @@
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="7" class="text-center py-4">
+                                <td colspan="8" class="text-center py-4">
                                     <div class="text-muted">
                                         <i class="bi bi-exclamation-circle display-4"></i>
                                         <h5 class="mt-2">No se encontraron reservas</h5>
@@ -227,4 +255,10 @@
         {% endif %}
     </div>
 </div>
+
+<style>
+.table-info:hover {
+    background-color: #d1ecf1 !important;
+}
+</style>
 {% endblock %}

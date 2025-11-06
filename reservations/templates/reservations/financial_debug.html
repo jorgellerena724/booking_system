@@ -37,7 +37,7 @@
     </div>
 
     <!-- Reservas con Ganancia Negativa -->
-    {% if negative_profit_reservations %}
+    {% if negative_profit_reservations_data %}
     <div class="card mb-4">
         <div class="card-header bg-warning">
             <h5 class="mb-0">⚠️ Reservas con Ganancia Negativa (Costo > Venta)</h5>
@@ -57,22 +57,21 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% for res in negative_profit_reservations %}
+                        {% for data in negative_profit_reservations_data %}
                         <tr>
                             <td>
-                                <a href="{% url 'reservations:detail' res.pk %}">{{ res.booking_code }}</a>
+                                <a href="{% url 'reservations:detail' data.reservation.pk %}">{{ data.reservation.booking_code }}</a>
                             </td>
-                            <td>{{ res.hotel|truncatewords:2 }}</td>
-                            <td>${{ res.sale_price|floatformat:2 }}</td>
-                            <td>${{ res.touch_cost|floatformat:2 }}</td>
+                            <td>{{ data.reservation.hotel|truncatewords:2 }}</td>
+                            <td>${{ data.reservation.sale_price|floatformat:2 }}</td>
+                            <td>${{ data.reservation.touch_cost|floatformat:2 }}</td>
                             <td class="text-danger">
-                                ${{ res.sale_price|floatformat:2 }} - ${{ res.touch_cost|floatformat:2 }} = 
-                                -${{ res.touch_cost|add:res.sale_price|floatformat:2 }}
+                                -${{ data.loss|floatformat:2 }}
                             </td>
-                            <td class="text-danger">{{ res.profit_percentage|floatformat:2 }}%</td>
+                            <td class="text-danger">{{ data.reservation.profit_percentage|floatformat:2 }}%</td>
                             <td>
-                                <span class="badge {% if res.status == 'OK' %}bg-success{% else %}bg-warning{% endif %}">
-                                    {{ res.get_status_display }}
+                                <span class="badge {% if data.reservation.status == 'OK' %}bg-success{% else %}bg-warning{% endif %}">
+                                    {{ data.reservation.get_status_display }}
                                 </span>
                             </td>
                         </tr>

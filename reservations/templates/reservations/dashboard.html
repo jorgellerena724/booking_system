@@ -21,14 +21,10 @@
             </a>
         </form>
         
-        <!-- Botones de exportación -->
-        <a href="{% url 'reservations:export_dashboard_pdf' %}?{{ request.GET.urlencode }}" 
-           class="btn btn-danger">
-            <i class="bi bi-file-pdf"></i> PDF
-        </a>
+        <!-- Botón de exportación Excel solamente -->
         <a href="{% url 'reservations:export_dashboard_excel' %}?{{ request.GET.urlencode }}" 
            class="btn btn-success">
-            <i class="bi bi-file-excel"></i> Excel
+            <i class="bi bi-file-excel"></i> Exportar Excel
         </a>
     </div>
 </div>

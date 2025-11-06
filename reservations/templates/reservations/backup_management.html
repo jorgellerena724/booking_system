@@ -1,0 +1,177 @@
+{% extends 'reservations/base.html' %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="mb-0">
+                <i class="bi bi-database-gear text-primary"></i> Gestión de Backup
+            </h2>
+            <a href="{% url 'reservations:list' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Volver al Sistema
+            </a>
+        </div>
+
+        <!-- Información de la Base de Datos -->
+        <div class="card info-card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-info-circle"></i> Información de la Base de Datos
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Ubicación:</strong> {{ db_path }}</p>
+                        <p><strong>Tamaño:</strong> {{ db_size }}</p>
+                        <p><strong>Última modificación:</strong> {{ db_modified }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="alert alert-info">
+                            <small>
+                                <i class="bi bi-exclamation-triangle"></i> 
+                                <strong>Recomendaciones:</strong><br>
+                                • Realiza backups regularmente<br>
+                                • Verifica los archivos antes de restaurar<br>
+                                • La restauración reemplazará TODOS los datos actuales
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Descargar Backup -->
+            <div class="col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-download"></i> Descargar Backup
+                        </h5>
+                    </div>
+                    <div class="card-body d-flex flex-column">
+                        <p class="card-text">
+                            Crea una copia de seguridad completa de la base de datos actual.
+                            El archivo incluye todas las reservas, habitaciones y configuraciones.
+                        </p>
+                        <div class="mt-auto">
+                            <a href="{% url 'reservations:backup_download' %}" class="btn btn-success w-100">
+                                <i class="bi bi-database-down"></i> Descargar Backup Completo
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Restaurar Backup -->
+            <div class="col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-upload"></i> Restaurar Backup
+                        </h5>
+                    </div>
+                    <div class="card-body d-flex flex-column">
+                        <div class="alert alert-warning">
+                            <i class="bi bi-exclamation-triangle-fill"></i>
+                            <strong>Advertencia:</strong> Esta operación reemplazará TODOS los datos actuales.
+                        </div>
+                        
+                        <form method="post" action="{% url 'reservations:backup_restore' %}" enctype="multipart/form-data" id="restoreForm">
+                            {% csrf_token %}
+                            <div class="mb-3">
+                                <label for="backup_file" class="form-label">Seleccionar archivo de backup (.sqlite3):</label>
+                                <input type="file" class="form-control" id="backup_file" name="backup_file" accept=".sqlite3" required>
+                                <div class="form-text">Solo se aceptan archivos SQLite válidos.</div>
+                            </div>
+                            
+                            <button type="button" class="btn btn-warning w-100" onclick="confirmRestore()">
+                                <i class="bi bi-database-up"></i> Restaurar Backup
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Instrucciones -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-question-circle"></i> Instrucciones
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>📥 Descargar Backup</h6>
+                        <ol>
+                            <li>Haz clic en "Descargar Backup Completo"</li>
+                            <li>Guarda el archivo en un lugar seguro</li>
+                            <li>El nombre incluye la fecha y hora del backup</li>
+                        </ol>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>📤 Restaurar Backup</h6>
+                        <ol>
+                            <li>Selecciona un archivo .sqlite3 válido</li>
+                            <li>Confirma la operación (se creará un backup automático)</li>
+                            <li>Espera a que se complete la restauración</li>
+                            <li>Reinicia la aplicación si es necesario</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function confirmRestore() {
+    const fileInput = document.getElementById('backup_file');
+    
+    if (!fileInput.files.length) {
+        alert('Por favor selecciona un archivo de backup.');
+        return;
+    }
+    
+    const fileName = fileInput.files[0].name;
+    const fileSize = (fileInput.files[0].size / 1024 / 1024).toFixed(2);
+    
+    const confirmation = confirm(
+        '⚠️ ADVERTENCIA CRÍTICA ⚠️\n\n' +
+        'Estás a punto de RESTAURAR un backup. Esta operación:\n\n' +
+        '• REEMPLAZARÁ todos los datos actuales\n' +
+        '• NO se puede deshacer\n' +
+        '• Se creará un backup automático antes de proceder\n\n' +
+        `Archivo: ${fileName}\n` +
+        `Tamaño: ${fileSize} MB\n\n` +
+        '¿Estás absolutamente seguro de continuar?'
+    );
+    
+    if (confirmation) {
+        // Confirmación adicional
+        const finalConfirmation = confirm(
+            'ÚLTIMA CONFIRMACIÓN:\n\n' +
+            '¿Estás SEGURO de que quieres reemplazar TODA la base de datos actual?\n' +
+            'Esta acción es IRREVERSIBLE.'
+        );
+        
+        if (finalConfirmation) {
+            document.getElementById('restoreForm').submit();
+        }
+    }
+}
+</script>
+
+<style>
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    border: 1px solid rgba(0, 0, 0, 0.125);
+}
+.card-header {
+    font-weight: 600;
+}
+</style>
+{% endblock %}

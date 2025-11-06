@@ -1,0 +1,65 @@
+{% extends 'reservations/base.html' %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Importar desde Paximum</h3>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="archivo_paximum" class="form-label">Seleccionar archivo HTML de Paximum:</label>
+                        <input type="file" class="form-control" id="archivo_paximum" name="archivo_paximum" accept=".html,.htm" required>
+                        <small class="form-text text-muted">
+                            Archivo HTML recibido por email de Paximum
+                        </small>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{% url 'reservations:list' %}" class="btn btn-secondary me-md-2">
+                            <i class="bi bi-arrow-left"></i> Volver a Reservas
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-cloud-upload"></i> Importar Reservas
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card info-card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-info-circle"></i> Información
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="card-text">Se importarán automáticamente:</p>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">
+                        <i class="bi bi-check-circle text-success"></i> Datos de huéspedes
+                    </li>
+                    <li class="list-group-item">
+                        <i class="bi bi-check-circle text-success"></i> Fechas de estadía
+                    </li>
+                    <li class="list-group-item">
+                        <i class="bi bi-check-circle text-success"></i> Información de habitaciones
+                    </li>
+                    <li class="list-group-item">
+                        <i class="bi bi-check-circle text-success"></i> Número de voucher
+                    </li>
+                    <li class="list-group-item">
+                        <i class="bi bi-check-circle text-success"></i> Precio de la reserva
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

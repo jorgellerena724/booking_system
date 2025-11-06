@@ -25,22 +25,60 @@
                         <h5 class="card-title">
                             <i class="bi bi-info-circle text-primary"></i> Resumen de Reservas
                         </h5>
-                        <div class="d-flex gap-4 mt-3">
-                            <div>
-                                <h3 class="text-primary mb-0">{{ page_obj.paginator.count }}</h3>
-                                <small class="text-muted">Total Reservas</small>
+                        <div class="d-flex gap-3 mt-3 flex-wrap">
+                            <!-- Total Reservas -->
+                            <div class="text-center">
+                                <h3 class="text-primary mb-0">{{ total_reservations }}</h3>
+                                <small class="text-muted">Total</small>
                             </div>
-                            <div>
-                                <h3 class="text-success mb-0">
-                                    {{ page_obj.paginator.count|default:0 }}
-                                </h3>
-                                <small class="text-muted">Disponibles</small>
+                            
+                            <!-- Disponibles -->
+                            <div class="text-center">
+                                <h3 class="text-success mb-0">{{ available_reservations }}</h3>
+                                <small class="text-muted">Confirmadas</small>
+                            </div>
+                            
+                            <!-- Canceladas -->
+                            <div class="text-center">
+                                <h3 class="text-danger mb-0">{{ cancelled_reservations }}</h3>
+                                <small class="text-muted">Canceladas</small>
+                            </div>
+                            
+                            <!-- Sin Costo -->
+                            <div class="text-center">
+                                <h3 class="text-warning mb-0">{{ reservations_sin_costo }}</h3>
+                                <small class="text-muted">Sin Costo</small>
+                            </div>
+                            
+                            <!-- Sin Confirmación Hotel -->
+                            <div class="text-center">
+                                <h3 class="text-info mb-0">{{ reservations_sin_confirmacion }}</h3>
+                                <small class="text-muted">Sin Confirmación</small>
                             </div>
                         </div>
                     </div>
                     <div class="col-md-6 text-end">
+                        <!-- Alertas -->
+                        <div class="d-flex flex-column gap-2">
+                            {% if reservations_sin_costo > 0 %}
+                            <div class="alert alert-warning alert-dismissible fade show mb-0" role="alert">
+                                <i class="bi bi-exclamation-triangle"></i>
+                                <strong>¡Atención!</strong> {{ reservations_sin_costo }} reserva(s) sin costo asignado
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                            {% endif %}
+                            
+                            {% if reservations_sin_confirmacion > 0 %}
+                            <div class="alert alert-info alert-dismissible fade show mb-0" role="alert">
+                                <i class="bi bi-building-exclamation"></i>
+                                <strong>¡Atención!</strong> {{ reservations_sin_confirmacion }} reserva(s) sin confirmación de hotel
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                            {% endif %}
+                        </div>
+
                         <!-- Ordenamiento -->
-                        <div class="btn-group me-3">
+                        <div class="btn-group me-3 mt-2">
                             <button type="button" class="btn btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown">
                                 <i class="bi bi-sort-down"></i> Ordenar por
                             </button>
@@ -56,17 +94,14 @@
                             </ul>
                         </div>
                         
-                        <div class="btn-group">
+                        <div class="btn-group mt-2">
                             <a href="?export=excel{% if current_order %}&order_by={{ current_order }}{% endif %}" class="btn export-btn text-white">
-                                <i class="bi bi-file-earmark-excel"></i> Exportar Excel
+                                <i class="bi bi-file-earmark-excel"></i> Excel
                             </a>
                             <a href="?export=pdf{% if current_order %}&order_by={{ current_order }}{% endif %}" class="btn btn-danger">
-                                <i class="bi bi-file-earmark-pdf"></i> Exportar PDF
+                                <i class="bi bi-file-earmark-pdf"></i> PDF
                             </a>
                         </div>
-                        <p class="text-muted mt-2 small">
-                            Exporta todas las reservas del sistema
-                        </p>
                     </div>
                 </div>
             </div>
@@ -97,16 +132,39 @@
                                 <th><i class="bi bi-building"></i> Hotel</th>
                                 <th><i class="bi bi-calendar-check"></i> Check-in</th>
                                 <th><i class="bi bi-calendar-x"></i> Check-out</th>
+                                <th><i class="bi bi-door-closed"></i> Habitaciones</th>
                                 <th><i class="bi bi-people"></i> PAX</th>
+                                <th><i class="bi bi-currency-dollar"></i> Costo</th>
+                                <th><i class="bi bi-building-check"></i> Confirmación</th>
                                 <th><i class="bi bi-info-circle"></i> Estado</th>
                                 <th><i class="bi bi-gear"></i> Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for reservation in page_obj %}
-                            <tr>
+                            <tr class="
+                                {% if reservation.touch_cost == 0 and reservation.status != 'CXX' %}table-warning{% endif %}
+                                {% if not reservation.hotel_confirmation and reservation.status != 'CXX' %}table-info{% endif %}
+                            "
+                                {% if reservation.touch_cost == 0 and reservation.status != 'CXX' %}
+                                data-bs-toggle="tooltip" 
+                                title="Reserva sin costo - Haga clic en Editar para agregar el costo"
+                                {% elif not reservation.hotel_confirmation and reservation.status != 'CXX' %}
+                                data-bs-toggle="tooltip" 
+                                title="Reserva sin confirmación de hotel - Haga clic en Editar para agregar la confirmación"
+                                {% endif %}>
                                 <td>
                                     <strong class="text-primary">{{ reservation.booking_code }}</strong>
+                                    {% if reservation.touch_cost == 0 and reservation.status != 'CXX' %}
+                                    <span class="badge bg-warning text-dark ms-1" data-bs-toggle="tooltip" title="Falta costo">
+                                        <i class="bi bi-currency-dollar"></i>
+                                    </span>
+                                    {% endif %}
+                                    {% if not reservation.hotel_confirmation and reservation.status != 'CXX' %}
+                                    <span class="badge bg-info text-dark ms-1" data-bs-toggle="tooltip" title="Falta confirmación hotel">
+                                        <i class="bi bi-building"></i>
+                                    </span>
+                                    {% endif %}
                                 </td>
                                 <td>
                                     <span data-bs-toggle="tooltip" title="{{ reservation.clients_names }}">
@@ -122,9 +180,40 @@
                                 </td>
                                 <td>
                                     <small>
-                                        <span class="badge bg-primary">AD: {{ reservation.pax_ad }}</span>
-                                        <span class="badge bg-info">CHD: {{ reservation.pax_chd }}</span>
+                                        <span class="badge bg-secondary" data-bs-toggle="tooltip" 
+                                               title="{{ reservation.get_rooms_display }}">
+                                            {{ reservation.rooms.count }} Hab.
+                                        </span>
                                     </small>
+                                </td>
+                                <td>
+                                    <small>
+                                        <span class="badge bg-primary">AD: {{ reservation.total_pax_ad }}</span>
+                                        <span class="badge bg-info">CHD: {{ reservation.total_pax_chd }}</span>
+                                        <span class="badge bg-success">Total: {{ reservation.total_pax }}</span>
+                                    </small>
+                                </td>
+                                <td>
+                                    {% if reservation.touch_cost == 0 and reservation.status != 'CXX' %}
+                                        <span class="badge bg-warning text-dark">
+                                            <i class="bi bi-exclamation-circle"></i> $0.00
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-success">
+                                            ${{ reservation.touch_cost }}
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if not reservation.hotel_confirmation and reservation.status != 'CXX' %}
+                                        <span class="badge bg-info text-dark">
+                                            <i class="bi bi-exclamation-circle"></i> Pendiente
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-success">
+                                            {{ reservation.hotel_confirmation|default:"Confirmada" }}
+                                        </span>
+                                    {% endif %}
                                 </td>
                                 <td>
                                     {% if reservation.status == 'OK' %}
@@ -152,7 +241,13 @@
                                         <a href="{% url 'reservations:update' reservation.pk %}" 
                                            class="btn btn-outline-warning" 
                                            data-bs-toggle="tooltip" 
-                                           title="Editar">
+                                           title="Editar
+{% if reservation.touch_cost == 0 and reservation.status != 'CXX' %}
+- Agregar costo
+{% endif %}
+{% if not reservation.hotel_confirmation and reservation.status != 'CXX' %}
+- Agregar confirmación hotel
+{% endif %}">
                                             <i class="bi bi-pencil"></i>
                                         </a>
                                         <a href="{% url 'reservations:delete' reservation.pk %}" 
@@ -166,7 +261,7 @@
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="8" class="text-center py-4">
+                                <td colspan="11" class="text-center py-4">
                                     <div class="text-muted">
                                         <i class="bi bi-inbox display-4"></i>
                                         <h5 class="mt-2">No hay reservas registradas</h5>
@@ -228,4 +323,36 @@
         </div>
     </div>
 </div>
+
+<style>
+.table-warning:hover {
+    background-color: #fff3cd !important;
+}
+.table-info:hover {
+    background-color: #d1ecf1 !important;
+}
+
+.status-confirmed {
+    color: #28a745;
+    font-weight: bold;
+}
+
+.status-cancelled {
+    color: #dc3545;
+    font-weight: bold;
+}
+
+.status-pending {
+    color: #ffc107;
+    font-weight: bold;
+}
+
+.export-btn {
+    background-color: #198754;
+}
+
+.export-btn:hover {
+    background-color: #157347;
+}
+</style>
 {% endblock %}

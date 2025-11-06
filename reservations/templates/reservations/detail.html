@@ -26,10 +26,51 @@
         <p><strong>Check-in:</strong> {{ reservation.date_from }}</p>
         <p><strong>Check-out:</strong> {{ reservation.date_to }}</p>
         <p><strong>Confirmación Hotel:</strong> {{ reservation.hotel_confirmation|default:"Pendiente" }}</p>
-        <p><strong>PAX Adultos:</strong> {{ reservation.pax_ad }}</p>
-        <p><strong>PAX Niños:</strong> {{ reservation.pax_chd }}</p>
+        <p><strong>Total PAX Adultos:</strong> {{ reservation.total_pax_ad }}</p>
+        <p><strong>Total PAX Niños:</strong> {{ reservation.total_pax_chd }}</p>
         <p><strong>Total PAX:</strong> {{ reservation.total_pax }}</p>
-        <p><strong>Tipo de Habitación:</strong> {{ reservation.room_type }}</p>
+    </div>
+</div>
+
+<!-- SECCIÓN DE HABITACIONES -->
+<div class="mt-4">
+    <h3>Habitaciones</h3>
+    <div class="card">
+        <div class="card-header">
+            <strong>Detalle de Habitaciones</strong>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Tipo de Habitación</th>
+                            <th>PAX Adultos</th>
+                            <th>PAX Niños</th>
+                            <th>Total PAX</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for room in reservation.rooms.all %}
+                        <tr>
+                            <td>{{ room.room_type }}</td>
+                            <td>{{ room.pax_ad }}</td>
+                            <td>{{ room.pax_chd }}</td>
+                            <td>{{ room.pax_ad|add:room.pax_chd }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot>
+                        <tr class="table-info">
+                            <td><strong>TOTALES</strong></td>
+                            <td><strong>{{ reservation.total_pax_ad }}</strong></td>
+                            <td><strong>{{ reservation.total_pax_chd }}</strong></td>
+                            <td><strong>{{ reservation.total_pax }}</strong></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -57,6 +98,6 @@
 <div style="margin-top: 20px;">
     <a href="{% url 'reservations:update' reservation.pk %}" class="btn btn-warning">Editar</a>
     <a href="{% url 'reservations:delete' reservation.pk %}" class="btn btn-danger">Eliminar</a>
-    <a href="{% url 'reservations:list' %}" class="btn">Volver a la Lista</a>
+    <a href="{% url 'reservations:list' %}" class="btn btn-secondary">Volver a la Lista</a>
 </div>
 {% endblock %}
