@@ -21,8 +21,9 @@ jobs:
           pip install -r requirements.txt
           pip install pyinstaller
 
+      # ¡ESTE ES EL CAMBIO CLAVE! El .bat se ejecuta DESPUÉS de instalar dependencias.
       - name: Construir ejecutable (Ejecutar tu .bat)
-        run: cmd /c build_final.bat  # CORRECCIÓN CLAVE AQUÍ
+        run: cmd /c build_final.bat
 
       - name: Verificar estructura generada
         run: |
