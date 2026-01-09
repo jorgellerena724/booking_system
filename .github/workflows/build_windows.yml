@@ -14,7 +14,7 @@ jobs:
       - name: Configurar Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'  # VERSIÓN ACTUALIZADA AQUÍ
+          python-version: '3.11'
 
       - name: Instalar dependencias
         run: |
@@ -24,7 +24,6 @@ jobs:
       - name: Configurar entorno Django
         run: |
           echo "Configurando entorno Django..."
-          # Ajusta 'booking_system' al nombre de tu proyecto Django
           $env:PYTHONPATH = "$env:PYTHONPATH;$pwd"
           $env:DJANGO_SETTINGS_MODULE = "booking_system.settings"
           python -c "import django; print(f'Django {django.__version__} configurado correctamente')"
@@ -36,14 +35,27 @@ jobs:
       - name: Verificar estructura generada
         run: |
           echo "Listando contenido de la carpeta de salida:"
-          dir "dist\SistemaReservas" /b /a-d
-          echo.
-          echo "Listando directorios dentro de la carpeta:"
-          dir "dist\SistemaReservas" /b /ad
+          # Comando corregido para PowerShell
+          if (Test-Path "dist\SistemaReservas") {
+            Get-ChildItem -Path "dist\SistemaReservas" -File | ForEach-Object { $_.Name }
+            echo ""
+            echo "Listando directorios dentro de la carpeta:"
+            Get-ChildItem -Path "dist\SistemaReservas" -Directory | ForEach-Object { $_.Name }
+          } else {
+            echo "¡La carpeta 'dist\SistemaReservas' no existe! El build falló."
+          }
+        shell: pwsh
 
       - name: Empaquetar para distribución
         run: |
-          Compress-Archive -Path "dist\SistemaReservas" -DestinationPath "SistemaReservas_Portable.zip" -Force
+          if (Test-Path "dist\SistemaReservas") {
+            Compress-Archive -Path "dist\SistemaReservas" -DestinationPath "SistemaReservas_Portable.zip" -Force
+            echo "ZIP creado exitosamente."
+          } else {
+            echo "ERROR: No se puede crear el ZIP porque 'dist\SistemaReservas' no existe."
+            exit 1
+          }
+        shell: pwsh
 
       - name: Subir paquete como artefacto
         uses: actions/upload-artifact@v4
