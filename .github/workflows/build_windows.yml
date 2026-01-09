@@ -1,0 +1,49 @@
+name: Generar Paquete Portable de Windows
+
+on:
+  push:
+    branches: [ main, master ]
+    # Para controlar más, puedes activarlo solo con tags (versiones):
+    # tags: [ 'v*' ]
+
+jobs:
+  build-portable:
+    runs-on: windows-latest
+    steps:
+      - name: Obtener el código fuente
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9' # Cambia a la versión que usa tu proyecto
+
+      - name: Instalar dependencias
+        run: |
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: Construir ejecutable (Ejecutar tu .bat)
+        run: build_final.bat
+        # Esto creará: dist\SistemaReservas\SistemaReservas.exe
+
+      - name: Verificar estructura generada
+        run: |
+          echo "Listando contenido de la carpeta de salida:"
+          dir "dist\SistemaReservas" /b /a-d
+          echo.
+          echo "Listando directorios dentro de la carpeta:"
+          dir "dist\SistemaReservas" /b /ad
+
+      - name: Empaquetar para distribución
+        run: |
+          # Empaqueta SOLO la carpeta 'SistemaReservas' con su contenido
+          # Esto creará un ZIP con la estructura correcta
+          Compress-Archive -Path "dist\SistemaReservas" -DestinationPath "SistemaReservas_Portable.zip" -Force
+
+      - name: Subir paquete como artefacto
+        uses: actions/upload-artifact@v4
+        with:
+          name: SistemaReservas-Portable-Windows
+          path: SistemaReservas_Portable.zip
+          retention-days: 7
