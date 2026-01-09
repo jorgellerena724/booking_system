@@ -21,7 +21,17 @@ jobs:
           pip install -r requirements.txt
           pip install pyinstaller
 
-      # ¡ESTE ES EL CAMBIO CLAVE! El .bat se ejecuta DESPUÉS de instalar dependencias.
+      # NUEVO PASO: Configurar entorno Django
+      - name: Configurar entorno Django
+        run: |
+          echo "Configurando entorno Django..."
+          # Ajusta 'booking_system' al nombre de tu proyecto Django
+          $env:PYTHONPATH = "$env:PYTHONPATH;$pwd"
+          $env:DJANGO_SETTINGS_MODULE = "booking_system.settings"
+          python -c "import django; print(f'Django {django.__version__} configurado correctamente')"
+        shell: pwsh
+
+      # El .bat se ejecuta AHORA con el entorno configurado
       - name: Construir ejecutable (Ejecutar tu .bat)
         run: cmd /c build_final.bat
 
