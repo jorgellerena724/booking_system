@@ -49,7 +49,6 @@ class ReservationForm(forms.ModelForm):
         }
 
 class ReservationSearchForm(forms.Form):
-    # Campos existentes
     search_text = forms.CharField(
         required=False,
         label='Buscar en todos los campos',
@@ -74,45 +73,22 @@ class ReservationSearchForm(forms.Form):
         label='Estado',
         widget=forms.Select(attrs={'class': 'form-control'})
     )
-    
-    # **MODIFICADO**: Cambiado nombre para evitar conflicto con campo de reserva
-    exact_date_from = forms.DateField(
+    date_from = forms.DateField(
         required=False,
-        label='Fecha exacta de entrada (check-in)',
+        label='Fecha desde',
         widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'})
     )
-    
-    # **NUEVO**: Campos para rango de fechas de check-in
-    date_range_from = forms.DateField(
+    date_to = forms.DateField(
         required=False,
-        label='Rango desde (check-in)',
+        label='Fecha hasta',
         widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'})
     )
-    
-    date_range_to = forms.DateField(
-        required=False,
-        label='Rango hasta (check-in)',
-        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'})
-    )
-    
-    # **NUEVO**: Campo para buscar por mes y año de check-in
-    month_year = forms.CharField(
-        required=False,
-        label='Mes y año de entrada (YYYY-MM)',
-        widget=forms.TextInput(attrs={
-            'class': 'form-control',
-            'placeholder': 'Ej: 2024-01 para enero 2024',
-            'pattern': r'\d{4}-\d{2}',
-            'title': 'Formato: YYYY-MM (ej: 2024-01)'
-        })
-    )
-    
     nationality = forms.CharField(
         required=False, 
         label='Nacionalidad',
         widget=forms.TextInput(attrs={'class': 'form-control'})
     )
-    
+    # AGREGAR ESTE CAMPO NUEVO
     room_type = forms.CharField(
         required=False, 
         label='Tipo de habitación',
@@ -121,53 +97,3 @@ class ReservationSearchForm(forms.Form):
             'placeholder': 'Ej: Doble Standard, Suite, etc.'
         })
     )
-    
-    # **NUEVO**: Filtro para confirmación de hotel
-    hotel_confirmation = forms.ChoiceField(
-        required=False,
-        choices=[
-            ('', 'Todas'),
-            ('confirmadas', 'Confirmadas'),
-            ('sin_confirmar', 'Sin confirmar')
-        ],
-        label='Confirmación hotel',
-        widget=forms.Select(attrs={'class': 'form-control'})
-    )
-    
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        # Agregar ayuda para los campos de fecha
-        self.fields['date_range_from'].help_text = 'Fecha de entrada desde'
-        self.fields['date_range_to'].help_text = 'Fecha de entrada hasta'
-        self.fields['exact_date_from'].help_text = 'Fecha exacta de entrada'
-        self.fields['month_year'].help_text = 'Busca por mes basado en fecha de entrada'
-    
-    def clean_month_year(self):
-        """Validar el formato de mes y año"""
-        month_year = self.cleaned_data.get('month_year')
-        
-        if month_year:
-            try:
-                # Verificar formato YYYY-MM
-                from datetime import datetime
-                datetime.strptime(month_year, '%Y-%m')
-            except ValueError:
-                raise forms.ValidationError('Formato incorrecto. Use YYYY-MM (ej: 2024-01)')
-        
-        return month_year
-    
-    def clean(self):
-        """Validaciones cruzadas entre campos de fecha"""
-        cleaned_data = super().clean()
-        
-        date_range_from = cleaned_data.get('date_range_from')
-        date_range_to = cleaned_data.get('date_range_to')
-        
-        # Validar que si se especifica rango, la fecha "desde" no sea mayor que "hasta"
-        if date_range_from and date_range_to:
-            if date_range_from > date_range_to:
-                raise forms.ValidationError({
-                    'date_range_from': 'La fecha "desde" no puede ser mayor que la fecha "hasta"'
-                })
-        
-        return cleaned_data

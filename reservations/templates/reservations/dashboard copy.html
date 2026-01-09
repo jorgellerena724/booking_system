@@ -4,40 +4,30 @@
 <div class="row">
     <div class="col-12">
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2 class="mb-0">
-                <i class="bi bi-speedometer2 text-primary"></i> Dashboard de Reservas
-            </h2>
-            
-            <div class="btn-group">
-                <!-- Filtros de fecha -->
-                <form method="get" class="d-flex gap-2 me-3">
-                    <!-- Rango de fechas -->
-                    <input type="date" name="date_range_from" value="{{ date_range_from|default:'' }}" 
-                           class="form-control" placeholder="Desde" title="Fecha de entrada desde">
-                    <input type="date" name="date_range_to" value="{{ date_range_to|default:'' }}" 
-                           class="form-control" placeholder="Hasta" title="Fecha de entrada hasta">
-                    
-                    <!-- Filtro por mes y año -->
-                    <input type="text" name="month_year" value="{{ month_year|default:'' }}" 
-                           class="form-control" placeholder="YYYY-MM"
-                           pattern="\d{4}-\d{2}" 
-                           title="Formato: YYYY-MM (ej: 2024-01 para enero 2024)">
-                    
-                    <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-filter"></i> Filtrar
-                    </button>
-                    <a href="{% url 'reservations:dashboard' %}" class="btn btn-outline-secondary">
-                        <i class="bi bi-arrow-clockwise"></i>
-                    </a>
-                </form>
-                
-                <!-- Botón de exportación Excel -->
-                <a href="{% url 'reservations:export_dashboard_excel' %}?{{ request.GET.urlencode }}" 
-                   class="btn btn-success">
-                    <i class="bi bi-file-excel"></i> Exportar Excel
-                </a>
-            </div>
-        </div>
+    <h2 class="mb-0">
+        <i class="bi bi-speedometer2 text-primary"></i> Dashboard de Reservas
+    </h2>
+    
+    <div class="btn-group">
+        <!-- Filtros de fecha -->
+        <form method="get" class="d-flex gap-2 me-3">
+            <input type="date" name="date_from" value="{{ date_from|default:'' }}" class="form-control" placeholder="Desde">
+            <input type="date" name="date_to" value="{{ date_to|default:'' }}" class="form-control" placeholder="Hasta">
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-filter"></i> Filtrar
+            </button>
+            <a href="{% url 'reservations:dashboard' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-clockwise"></i>
+            </a>
+        </form>
+        
+        <!-- Botón de exportación Excel solamente -->
+        <a href="{% url 'reservations:export_dashboard_excel' %}?{{ request.GET.urlencode }}" 
+           class="btn btn-success">
+            <i class="bi bi-file-excel"></i> Exportar Excel
+        </a>
+    </div>
+</div>
 
         <!-- Métricas Principales -->
         <div class="row mb-4">

@@ -18,26 +18,34 @@
                 <h5 class="card-title mb-0">
                     <i class="bi bi-funnel"></i> Filtros de Búsqueda
                 </h5>
+                <p class="mb-0 text-muted small">Búsqueda basada en fecha de entrada (check-in)</p>
             </div>
             <div class="card-body">
                 <form method="get" class="row g-3">
-                    <div class="col-md-6">
+                    <!-- Búsqueda general -->
+                    <div class="col-md-12 mb-3">
                         <label class="form-label">Buscar en todos los campos</label>
-                        <input type="text" name="search_text" value="{{ request.GET.search_text|default:'' }}" class="form-control" placeholder="Texto en cualquier campo...">
+                        <input type="text" name="search_text" value="{{ request.GET.search_text|default:'' }}" 
+                               class="form-control" placeholder="Texto en cualquier campo...">
                     </div>
-                    <div class="col-md-6">
+                    
+                    <!-- Campos básicos -->
+                    <div class="col-md-3">
                         <label class="form-label">Agencia</label>
-                        <input type="text" name="agency" value="{{ request.GET.agency|default:'' }}" class="form-control">
+                        <input type="text" name="agency" value="{{ request.GET.agency|default:'' }}" 
+                               class="form-control">
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-3">
                         <label class="form-label">Hotel</label>
-                        <input type="text" name="hotel" value="{{ request.GET.hotel|default:'' }}" class="form-control">
+                        <input type="text" name="hotel" value="{{ request.GET.hotel|default:'' }}" 
+                               class="form-control">
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-3">
                         <label class="form-label">Nacionalidad</label>
-                        <input type="text" name="nationality" value="{{ request.GET.nationality|default:'' }}" class="form-control">
+                        <input type="text" name="nationality" value="{{ request.GET.nationality|default:'' }}" 
+                               class="form-control">
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-3">
                         <label class="form-label">Estado</label>
                         <select name="status" class="form-select">
                             <option value="">Todos</option>
@@ -46,13 +54,15 @@
                             <option value="PENDING" {% if request.GET.status == 'PENDING' %}selected{% endif %}>Pendiente</option>
                         </select>
                     </div>
-                    <div class="col-md-6">
+                    
+                    <!-- Tipo de habitación y confirmación -->
+                    <div class="col-md-3">
                         <label class="form-label">Tipo de habitación</label>
-                        <input type="text" name="room_type" value="{{ request.GET.room_type|default:'' }}" class="form-control">
+                        <input type="text" name="room_type" value="{{ request.GET.room_type|default:'' }}" 
+                               class="form-control" placeholder="Ej: Doble Standard, Suite, etc.">
                     </div>
                     
-                    <!-- NUEVO: Filtro para Confirmación Hotel -->
-                    <div class="col-md-6">
+                    <div class="col-md-3">
                         <label class="form-label">Confirmación Hotel</label>
                         <select name="hotel_confirmation" class="form-select">
                             <option value="">Todos</option>
@@ -61,14 +71,92 @@
                         </select>
                     </div>
                     
-                    <div class="col-md-6">
-                        <label class="form-label">Fecha desde</label>
-                        <input type="date" name="date_from" value="{{ request.GET.date_from|default:'' }}" class="form-control">
+                    <!-- NUEVO: Sección de filtros por fecha de entrada (check-in) -->
+                    <div class="col-12 mt-4">
+                        <h6 class="text-primary mb-3 border-bottom pb-2">
+                            <i class="bi bi-calendar-event"></i> Filtros por Fecha de Entrada (Check-in)
+                        </h6>
+                        <p class="text-muted small mb-3">Seleccione UNA de las siguientes opciones:</p>
+                        
+                        <!-- Opción 1: Fecha exacta -->
+                        <div class="row mb-4">
+                            <div class="col-md-12">
+                                <div class="form-check mb-2">
+                                    <input type="radio" class="form-check-input" id="filtro_exacto" name="filtro_fecha" value="exacto"
+                                           {% if request.GET.exact_date_from and not request.GET.date_range_from and not request.GET.month_year %}checked{% endif %}>
+                                    <label class="form-check-label" for="filtro_exacto">
+                                        <strong>Fecha exacta de entrada</strong>
+                                    </label>
+                                </div>
+                                <div class="row ms-4" id="campo_fecha_exacta" 
+                                     style="{% if not request.GET.exact_date_from and request.GET.date_range_from or request.GET.month_year %}display:none;{% endif %}">
+                                    <div class="col-md-4">
+                                        <label class="form-label">Fecha exacta</label>
+                                        <!-- CAMBIO: date_from → exact_date_from -->
+                                        <input type="date" name="exact_date_from" value="{{ request.GET.exact_date_from|default:'' }}" 
+                                               class="form-control">
+                                        <small class="form-text text-muted">Busca reservas con check-in en esta fecha específica</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Opción 2: Rango de fechas -->
+                        <div class="row mb-4">
+                            <div class="col-md-12">
+                                <div class="form-check mb-2">
+                                    <input type="radio" class="form-check-input" id="filtro_rango" name="filtro_fecha" value="rango"
+                                           {% if request.GET.date_range_from or request.GET.date_range_to %}checked{% endif %}>
+                                    <label class="form-check-label" for="filtro_rango">
+                                        <strong>Rango de fechas de entrada</strong>
+                                    </label>
+                                </div>
+                                <div class="row ms-4" id="campo_rango_fechas" 
+                                     style="{% if not request.GET.date_range_from and not request.GET.date_range_to %}display:none;{% endif %}">
+                                    <div class="col-md-3">
+                                        <label class="form-label">Desde</label>
+                                        <input type="date" name="date_range_from" 
+                                               value="{{ request.GET.date_range_from|default:'' }}" 
+                                               class="form-control">
+                                        <small class="form-text text-muted">Fecha de entrada desde</small>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label">Hasta</label>
+                                        <input type="date" name="date_range_to" 
+                                               value="{{ request.GET.date_range_to|default:'' }}" 
+                                               class="form-control">
+                                        <small class="form-text text-muted">Fecha de entrada hasta</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Opción 3: Mes y año -->
+                        <div class="row mb-4">
+                            <div class="col-md-12">
+                                <div class="form-check mb-2">
+                                    <input type="radio" class="form-check-input" id="filtro_mes" name="filtro_fecha" value="mes"
+                                           {% if request.GET.month_year %}checked{% endif %}>
+                                    <label class="form-check-label" for="filtro_mes">
+                                        <strong>Mes y año de entrada</strong>
+                                    </label>
+                                </div>
+                                <div class="row ms-4" id="campo_mes_ano" 
+                                     style="{% if not request.GET.month_year %}display:none;{% endif %}">
+                                    <div class="col-md-3">
+                                        <label class="form-label">Mes y año (YYYY-MM)</label>
+                                        <input type="text" name="month_year" 
+                                               value="{{ request.GET.month_year|default:'' }}" 
+                                               class="form-control" placeholder="Ej: 2024-01"
+                                               pattern="\d{4}-\d{2}" 
+                                               title="Formato: YYYY-MM (ej: 2024-01 para enero 2024)">
+                                        <small class="form-text text-muted">Busca reservas con check-in en este mes y año</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="col-md-6">
-                        <label class="form-label">Fecha hasta</label>
-                        <input type="date" name="date_to" value="{{ request.GET.date_to|default:'' }}" class="form-control">
-                    </div>
+                    <!-- FIN de sección de filtros por fecha -->
                     
                     <div class="col-12">
                         <div class="d-flex gap-2 align-items-center">
@@ -78,6 +166,18 @@
                             <a href="{% url 'reservations:search' %}" class="btn btn-outline-secondary">
                                 <i class="bi bi-arrow-clockwise"></i> Limpiar
                             </a>
+                            
+                            <!-- Botones de exportación (se activan si hay resultados) -->
+                            {% if search_performed and page_obj.paginator.count > 0 %}
+                            <div class="btn-group ms-2">
+                                <button type="submit" name="export" value="excel" class="btn btn-success">
+                                    <i class="bi bi-file-earmark-excel"></i> Excel
+                                </button>
+                                <button type="submit" name="export" value="pdf" class="btn btn-danger">
+                                    <i class="bi bi-file-earmark-pdf"></i> PDF
+                                </button>
+                            </div>
+                            {% endif %}
                         </div>
                     </div>
                 </form>
@@ -94,12 +194,15 @@
                         <span class="badge bg-primary ms-2">{{ page_obj.paginator.count }} encontrados</span>
                     </h5>
                     {% if page_obj.paginator.count > 0 %}
-                    <div class="btn-group">
-                        <a href="?{{ request.GET.urlencode }}&export=excel" class="btn export-btn text-white btn-sm">
-                            <i class="bi bi-file-earmark-excel"></i> Exportar Excel
+                    <div>
+                        <span class="text-muted me-3">Ordenar por:</span>
+                        <a href="?{% for key, value in request.GET.items %}{% if key != 'order_by' %}{{ key }}={{ value }}&{% endif %}{% endfor %}order_by=date_from" 
+                           class="btn btn-sm {% if request.GET.order_by == 'date_from' or not request.GET.order_by %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                            Fecha Entrada
                         </a>
-                        <a href="?{{ request.GET.urlencode }}&export=pdf" class="btn btn-danger btn-sm">
-                            <i class="bi bi-file-earmark-pdf"></i> Exportar PDF
+                        <a href="?{% for key, value in request.GET.items %}{% if key != 'order_by' %}{{ key }}={{ value }}&{% endif %}{% endfor %}order_by=-created_at" 
+                           class="btn btn-sm {% if request.GET.order_by == '-created_at' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                            Más Recientes
                         </a>
                     </div>
                     {% endif %}
@@ -256,9 +359,150 @@
     </div>
 </div>
 
+<!-- JavaScript para manejar los radio buttons de fecha -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Referencias a los elementos
+    const filtroExacto = document.getElementById('filtro_exacto');
+    const filtroRango = document.getElementById('filtro_rango');
+    const filtroMes = document.getElementById('filtro_mes');
+    
+    const campoFechaExacta = document.getElementById('campo_fecha_exacta');
+    const campoRangoFechas = document.getElementById('campo_rango_fechas');
+    const campoMesAno = document.getElementById('campo_mes_ano');
+    
+    // Función para mostrar solo el campo seleccionado
+    function mostrarCampoSeleccionado() {
+        // Ocultar todos primero
+        campoFechaExacta.style.display = 'none';
+        campoRangoFechas.style.display = 'none';
+        campoMesAno.style.display = 'none';
+        
+        // Mostrar solo el seleccionado
+        if (filtroExacto.checked) {
+            campoFechaExacta.style.display = 'flex';
+        } else if (filtroRango.checked) {
+            campoRangoFechas.style.display = 'flex';
+        } else if (filtroMes.checked) {
+            campoMesAno.style.display = 'flex';
+        }
+    }
+    
+    // Agregar eventos a los radio buttons
+    [filtroExacto, filtroRango, filtroMes].forEach(radio => {
+        radio.addEventListener('change', mostrarCampoSeleccionado);
+    });
+    
+    // También mostrar/ocultar cuando se hace click en los campos
+    document.querySelectorAll('.form-check-input').forEach(input => {
+        input.addEventListener('click', function() {
+            // Asegurar que solo un radio esté seleccionado
+            document.querySelectorAll('.form-check-input').forEach(otherInput => {
+                if (otherInput !== this) {
+                    otherInput.checked = false;
+                }
+            });
+            this.checked = true;
+            mostrarCampoSeleccionado();
+        });
+    });
+    
+    // Validación del formulario
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const monthYearInput = document.querySelector('input[name="month_year"]');
+        if (monthYearInput.value.trim() !== '' && !monthYearInput.value.match(/^\d{4}-\d{2}$/)) {
+            e.preventDefault();
+            alert('Formato de mes/año incorrecto. Use YYYY-MM (ej: 2024-01)');
+            monthYearInput.focus();
+            return false;
+        }
+        
+        // Validar que si se especifica rango, la fecha "desde" no sea mayor que "hasta"
+        const dateRangeFrom = document.querySelector('input[name="date_range_from"]');
+        const dateRangeTo = document.querySelector('input[name="date_range_to"]');
+        
+        if (dateRangeFrom.value && dateRangeTo.value && dateRangeFrom.value > dateRangeTo.value) {
+            e.preventDefault();
+            alert('La fecha "Desde" no puede ser mayor que la fecha "Hasta"');
+            dateRangeFrom.focus();
+            return false;
+        }
+    });
+    
+    // Si algún campo de fecha tiene valor, marcar el radio correspondiente
+    const fechaExactaValor = document.querySelector('input[name="exact_date_from"]').value;
+    const fechaDesdeValor = document.querySelector('input[name="date_range_from"]').value;
+    const fechaHastaValor = document.querySelector('input[name="date_range_to"]').value;
+    const mesValor = document.querySelector('input[name="month_year"]').value;
+    
+    if (fechaExactaValor && !fechaDesdeValor && !fechaHastaValor && !mesValor) {
+        filtroExacto.checked = true;
+        mostrarCampoSeleccionado();
+    } else if (fechaDesdeValor || fechaHastaValor) {
+        filtroRango.checked = true;
+        mostrarCampoSeleccionado();
+    } else if (mesValor) {
+        filtroMes.checked = true;
+        mostrarCampoSeleccionado();
+    }
+});
+</script>
+
 <style>
+.form-check-input:checked {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+.row.ms-4 {
+    margin-left: 1.5rem !important;
+    border-left: 3px solid #dee2e6;
+    padding-left: 1rem;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+    background-color: #f8f9fa;
+    border-radius: 0.25rem;
+    margin-top: 0.5rem;
+}
+
+.form-check-label strong {
+    color: #495057;
+    font-size: 0.95rem;
+}
+
+.text-muted.small {
+    font-size: 0.85rem;
+}
+
+.btn-group .btn {
+    font-size: 0.875rem;
+}
+
 .table-info:hover {
     background-color: #d1ecf1 !important;
+}
+
+/* Estilos para los campos de fecha cuando están activos */
+.form-check-input:checked + .form-check-label {
+    color: #0d6efd;
+    font-weight: 600;
+}
+
+/* Asegurar que las tablas sean responsive */
+.table-responsive {
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+/* Mejoras para los botones de ordenamiento */
+.btn-group-sm .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+}
+
+/* Estilo para el tooltip de Bootstrap */
+.tooltip {
+    z-index: 9999;
 }
 </style>
 {% endblock %}

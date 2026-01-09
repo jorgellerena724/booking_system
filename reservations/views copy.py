@@ -316,19 +316,12 @@ def reservation_search(request):
         agency = form.cleaned_data.get('agency')
         hotel = form.cleaned_data.get('hotel')
         status = form.cleaned_data.get('status')
-        date_from = form.cleaned_data.get('date_from')  # Fecha de check-in específica
-        date_range_from = form.cleaned_data.get('date_range_from')  # Rango desde
-        date_range_to = form.cleaned_data.get('date_range_to')  # Rango hasta
-        month_year = form.cleaned_data.get('month_year')  # Mes y año
+        date_from = form.cleaned_data.get('date_from')  # SOLO fecha de check-in
         nationality = form.cleaned_data.get('nationality')
         room_type = form.cleaned_data.get('room_type')
         hotel_confirmation = request.GET.get('hotel_confirmation')
         
-        search_performed = any([
-            search_text, agency, hotel, status, date_from, 
-            date_range_from, date_range_to, month_year, 
-            nationality, room_type, hotel_confirmation
-        ])
+        search_performed = any([search_text, agency, hotel, status, date_from, nationality, room_type, hotel_confirmation])
         
         if search_text:
             reservations = reservations.filter(
@@ -354,36 +347,9 @@ def reservation_search(request):
         if room_type:
             reservations = reservations.filter(rooms__room_type__icontains=room_type)
             
-        # MODIFICADO: Búsqueda por fecha EXACTA de check-in (date_from)
+        # MODIFICADO: Solo filtrar por fecha de check-in (date_from)
         if date_from:
             reservations = reservations.filter(date_from=date_from)
-            
-        # NUEVO: Búsqueda por RANGO de fechas de check-in
-        if date_range_from and date_range_to:
-            # Buscar reservas cuyo check-in esté dentro del rango
-            reservations = reservations.filter(
-                date_from__gte=date_range_from,
-                date_from__lte=date_range_to
-            )
-        elif date_range_from:
-            # Solo fecha desde
-            reservations = reservations.filter(date_from__gte=date_range_from)
-        elif date_range_to:
-            # Solo fecha hasta
-            reservations = reservations.filter(date_from__lte=date_range_to)
-            
-        # NUEVO: Búsqueda por MES y AÑO de check-in
-        if month_year:
-            # month_year viene en formato "YYYY-MM"
-            try:
-                year, month = map(int, month_year.split('-'))
-                # Filtrar por mes y año de la fecha de entrada
-                reservations = reservations.filter(
-                    date_from__year=year,
-                    date_from__month=month
-                )
-            except (ValueError, AttributeError):
-                pass
             
         # FILTRO: Confirmación Hotel
         if hotel_confirmation == 'sin_confirmar':
@@ -419,10 +385,7 @@ def export_reservations_excel(request):
         agency = form.cleaned_data.get('agency')
         hotel = form.cleaned_data.get('hotel')
         status = form.cleaned_data.get('status')
-        date_from = form.cleaned_data.get('date_from')  # Fecha exacta de check-in
-        date_range_from = form.cleaned_data.get('date_range_from')  # Rango desde
-        date_range_to = form.cleaned_data.get('date_range_to')  # Rango hasta
-        month_year = form.cleaned_data.get('month_year')  # Mes y año
+        date_from = form.cleaned_data.get('date_from')  # SOLO fecha de check-in
         nationality = form.cleaned_data.get('nationality')
         room_type = form.cleaned_data.get('room_type')
         
@@ -450,31 +413,9 @@ def export_reservations_excel(request):
         if room_type:
             reservations = reservations.filter(rooms__room_type__icontains=room_type)
             
-        # Fecha exacta de check-in
+        # MODIFICADO: Solo filtrar por fecha de check-in
         if date_from:
             reservations = reservations.filter(date_from=date_from)
-            
-        # Rango de fechas de check-in
-        if date_range_from and date_range_to:
-            reservations = reservations.filter(
-                date_from__gte=date_range_from,
-                date_from__lte=date_range_to
-            )
-        elif date_range_from:
-            reservations = reservations.filter(date_from__gte=date_range_from)
-        elif date_range_to:
-            reservations = reservations.filter(date_from__lte=date_range_to)
-            
-        # Mes y año de check-in
-        if month_year:
-            try:
-                year, month = map(int, month_year.split('-'))
-                reservations = reservations.filter(
-                    date_from__year=year,
-                    date_from__month=month
-                )
-            except (ValueError, AttributeError):
-                pass
     
     # Preparar datos para Excel
     data = []
@@ -546,10 +487,7 @@ def export_reservations_pdf(request):
             agency = form.cleaned_data.get('agency')
             hotel = form.cleaned_data.get('hotel')
             status = form.cleaned_data.get('status')
-            date_from = form.cleaned_data.get('date_from')  # Fecha exacta de check-in
-            date_range_from = form.cleaned_data.get('date_range_from')  # Rango desde
-            date_range_to = form.cleaned_data.get('date_range_to')  # Rango hasta
-            month_year = form.cleaned_data.get('month_year')  # Mes y año
+            date_from = form.cleaned_data.get('date_from')  # SOLO fecha de check-in
             nationality = form.cleaned_data.get('nationality')
             room_type = form.cleaned_data.get('room_type')
             
@@ -577,31 +515,9 @@ def export_reservations_pdf(request):
             if room_type:
                 reservations = reservations.filter(rooms__room_type__icontains=room_type)
                 
-            # Fecha exacta de check-in
+            # MODIFICADO: Solo filtrar por fecha de check-in
             if date_from:
                 reservations = reservations.filter(date_from=date_from)
-                
-            # Rango de fechas de check-in
-            if date_range_from and date_range_to:
-                reservations = reservations.filter(
-                    date_from__gte=date_range_from,
-                    date_from__lte=date_range_to
-                )
-            elif date_range_from:
-                reservations = reservations.filter(date_from__gte=date_range_from)
-            elif date_range_to:
-                reservations = reservations.filter(date_from__lte=date_range_to)
-                
-            # Mes y año de check-in
-            if month_year:
-                try:
-                    year, month = map(int, month_year.split('-'))
-                    reservations = reservations.filter(
-                        date_from__year=year,
-                        date_from__month=month
-                    )
-                except (ValueError, AttributeError):
-                    pass
         
         # Estadísticas para el reporte - EXCLUIR CANCELADAS de ingresos
         total_reservations = reservations.count()
@@ -617,9 +533,7 @@ def export_reservations_pdf(request):
             'total_revenue': total_revenue,
             'total_profit': total_profit,
             'filters_applied': any(field in request.GET for field in [
-                'search_text', 'agency', 'hotel', 'status', 'date_from', 
-                'date_range_from', 'date_range_to', 'month_year',
-                'nationality', 'room_type'
+                'search_text', 'agency', 'hotel', 'status', 'date_from', 'nationality', 'room_type'
             ]),
             'request': request,
             'generated_date': datetime.now().strftime('%d/%m/%Y %H:%M'),
@@ -653,35 +567,15 @@ def export_reservations_pdf(request):
 
 @login_required
 def dashboard(request):
-    # Filtros de fecha opcionales
-    date_range_from = request.GET.get('date_range_from')
-    date_range_to = request.GET.get('date_range_to')
-    month_year = request.GET.get('month_year')
+    # Filtros de fecha opcionales (solo check-in)
+    date_from = request.GET.get('date_from')
     
     # Base queryset
     reservations = Reservation.objects.all()
     
-    # Aplicar filtros de fecha si existen
-    if date_range_from and date_range_to:
-        reservations = reservations.filter(
-            date_from__gte=date_range_from,
-            date_from__lte=date_range_to
-        )
-    elif date_range_from:
-        reservations = reservations.filter(date_from__gte=date_range_from)
-    elif date_range_to:
-        reservations = reservations.filter(date_from__lte=date_range_to)
-    
-    # Aplicar filtro por mes y año
-    if month_year:
-        try:
-            year, month = map(int, month_year.split('-'))
-            reservations = reservations.filter(
-                date_from__year=year,
-                date_from__month=month
-            )
-        except (ValueError, AttributeError):
-            pass
+    # Aplicar filtros de fecha si existen (SOLO check-in)
+    if date_from:
+        reservations = reservations.filter(date_from=date_from)
     
     # MÉTRICAS FINANCIERAS - EXCLUIR CANCELADAS
     active_reservations = reservations.exclude(status='CXX')
@@ -774,10 +668,8 @@ def dashboard(request):
         'hotel_data': hotel_data,
         'monthly_trend': monthly_trend,
         
-        # Filtros
-        'date_range_from': date_range_from,
-        'date_range_to': date_range_to,
-        'month_year': month_year,
+        # Filtros (solo date_from)
+        'date_from': date_from,
     }
     
     return render(request, 'reservations/dashboard.html', context)
@@ -993,34 +885,14 @@ def export_dashboard_excel(request):
     """Exportar métricas del dashboard a Excel con gráficos y formato profesional"""
     try:
         # Replicar la lógica del dashboard para obtener los datos
-        date_range_from = request.GET.get('date_range_from')
-        date_range_to = request.GET.get('date_range_to')
-        month_year = request.GET.get('month_year')
+        date_from = request.GET.get('date_from')
         
         # Base queryset
         reservations = Reservation.objects.all()
         
-        # Aplicar filtros de fecha si existen
-        if date_range_from and date_range_to:
-            reservations = reservations.filter(
-                date_from__gte=date_range_from,
-                date_from__lte=date_range_to
-            )
-        elif date_range_from:
-            reservations = reservations.filter(date_from__gte=date_range_from)
-        elif date_range_to:
-            reservations = reservations.filter(date_from__lte=date_range_to)
-        
-        # Aplicar filtro por mes y año
-        if month_year:
-            try:
-                year, month = map(int, month_year.split('-'))
-                reservations = reservations.filter(
-                    date_from__year=year,
-                    date_from__month=month
-                )
-            except (ValueError, AttributeError):
-                pass
+        # Aplicar filtros de fecha si existen (SOLO check-in)
+        if date_from:
+            reservations = reservations.filter(date_from=date_from)
         
         # MÉTRICAS FINANCIERAS - EXCLUIR CANCELADAS
         active_reservations = reservations.exclude(status='CXX')
@@ -1074,13 +946,8 @@ def export_dashboard_excel(request):
         ws_dashboard['A1'].alignment = Alignment(horizontal='center')
         
         # Información de filtros
-        filter_text = ""
-        if date_range_from and date_range_to:
-            filter_text = f"Filtro aplicado: Check-in desde {date_range_from} hasta {date_range_to}"
-        elif month_year:
-            filter_text = f"Filtro aplicado: Mes {month_year}"
-        
-        if filter_text:
+        if date_from:
+            filter_text = f"Filtro aplicado: Check-in {date_from}"
             ws_dashboard['A2'] = filter_text
             ws_dashboard['A2'].font = Font(italic=True, color="666666")
         

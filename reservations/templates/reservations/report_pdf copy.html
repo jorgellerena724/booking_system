@@ -89,26 +89,6 @@
             padding: 8px;
             margin-bottom: 12px;
             border-radius: 3px;
-            font-size: 11px;
-            border-left: 4px solid #ffc107;
-        }
-        .filters-section {
-            background: #f8f9fa;
-            padding: 10px;
-            margin-bottom: 15px;
-            border-radius: 5px;
-            border: 1px solid #dee2e6;
-        }
-        .filter-category {
-            font-weight: bold;
-            color: #495057;
-            margin-top: 8px;
-            padding-bottom: 4px;
-            border-bottom: 1px dashed #adb5bd;
-        }
-        .filter-item {
-            margin-left: 15px;
-            margin-bottom: 3px;
         }
         .footer {
             margin-top: 20px;
@@ -121,99 +101,27 @@
         .page-break {
             page-break-before: always;
         }
-        .date-filters {
-            background: #e3f2fd;
-            padding: 8px;
-            border-radius: 4px;
-            margin-top: 5px;
-            margin-bottom: 5px;
-        }
-        .date-filter-label {
-            color: #0d6efd;
-            font-weight: bold;
-        }
     </style>
 </head>
 <body>
     <div class="header">
         <h1>Reporte de Reservas - Sistema de Reservas Hoteleras</h1>
         <p>Generado: {{ generated_date }}</p>
-        <p><strong>Nota:</strong> Todas las búsquedas se basan en fecha de entrada (check-in)</p>
     </div>
 
-    <!-- Sección de filtros aplicados (mejor organizada) -->
-    <div class="filters-section">
-        <h4 style="color: #333; margin: 0 0 10px 0; font-size: 14px;">
-            <strong>Filtros Aplicados</strong>
-        </h4>
-        
-        {% if request.GET.search_text or request.GET.agency or request.GET.hotel or request.GET.nationality or request.GET.room_type %}
-        <div class="filter-category">Búsqueda General:</div>
-        {% if request.GET.search_text %}
-        <div class="filter-item">• Texto: "{{ request.GET.search_text }}"</div>
-        {% endif %}
-        {% if request.GET.agency %}
-        <div class="filter-item">• Agencia: "{{ request.GET.agency }}"</div>
-        {% endif %}
-        {% if request.GET.hotel %}
-        <div class="filter-item">• Hotel: "{{ request.GET.hotel }}"</div>
-        {% endif %}
-        {% if request.GET.nationality %}
-        <div class="filter-item">• Nacionalidad: "{{ request.GET.nationality }}"</div>
-        {% endif %}
-        {% if request.GET.room_type %}
-        <div class="filter-item">• Tipo habitación: "{{ request.GET.room_type }}"</div>
-        {% endif %}
-        {% endif %}
-        
-        {% if request.GET.status or request.GET.hotel_confirmation %}
-        <div class="filter-category">Estado y Confirmación:</div>
-        {% if request.GET.status %}
-        <div class="filter-item">• Estado: 
-            {% if request.GET.status == 'OK' %}Confirmada{% endif %}
-            {% if request.GET.status == 'CXX' %}Cancelada{% endif %}
-            {% if request.GET.status == 'PENDING' %}Pendiente{% endif %}
-        </div>
-        {% endif %}
-        {% if request.GET.hotel_confirmation %}
-        <div class="filter-item">• Confirmación Hotel: 
-            {% if request.GET.hotel_confirmation == 'sin_confirmar' %}Sin Confirmar{% endif %}
-            {% if request.GET.hotel_confirmation == 'confirmadas' %}Confirmadas{% endif %}
-        </div>
-        {% endif %}
-        {% endif %}
-        
-        <!-- NUEVO: Sección para filtros de fecha de entrada -->
-        {% if request.GET.exact_date_from or request.GET.date_range_from or request.GET.date_range_to or request.GET.month_year %}
-        <div class="filter-category">Filtros por Fecha de Entrada (Check-in):</div>
-        <div class="date-filters">
-            {% if request.GET.exact_date_from %}
-            <div class="filter-item date-filter-label">• Fecha exacta: {{ request.GET.exact_date_from }}</div>
-            {% endif %}
-            
-            {% if request.GET.date_range_from or request.GET.date_range_to %}
-            <div class="filter-item date-filter-label">• Rango: 
-                {% if request.GET.date_range_from %}
-                Desde {{ request.GET.date_range_from }}
-                {% endif %}
-                {% if request.GET.date_range_to %}
-                Hasta {{ request.GET.date_range_to }}
-                {% endif %}
-            </div>
-            {% endif %}
-            
-            {% if request.GET.month_year %}
-            <div class="filter-item date-filter-label">• Mes y año: {{ request.GET.month_year }}</div>
-            {% endif %}
-        </div>
-        {% endif %}
-        
-        {% if not request.GET.search_text and not request.GET.agency and not request.GET.hotel and not request.GET.status and not request.GET.nationality and not request.GET.room_type and not request.GET.hotel_confirmation and not request.GET.exact_date_from and not request.GET.date_range_from and not request.GET.date_range_to and not request.GET.month_year %}
-        <div style="text-align: center; color: #666; font-style: italic; padding: 10px;">
-            No se aplicaron filtros - Mostrando todas las reservas
-        </div>
-        {% endif %}
+    {% if filters_applied %}
+    <div class="filters-info">
+        <strong>Filtros aplicados:</strong><br>
+        {% if request.GET.search_text %} • Texto: "{{ request.GET.search_text }}"{% endif %}
+        {% if request.GET.agency %} • Agencia: "{{ request.GET.agency }}"{% endif %}
+        {% if request.GET.hotel %} • Hotel: "{{ request.GET.hotel }}"{% endif %}
+        {% if request.GET.status %} • Estado: "{{ request.GET.status }}"{% endif %}
+        {% if request.GET.nationality %} • Nacionalidad: "{{ request.GET.nationality }}"{% endif %}
+        {% if request.GET.room_type %} • Tipo habitación: "{{ request.GET.room_type }}"{% endif %}
+        {% if request.GET.date_from %} • Fecha desde: "{{ request.GET.date_from }}"{% endif %}
+        {% if request.GET.date_to %} • Fecha hasta: "{{ request.GET.date_to }}"{% endif %}
     </div>
+    {% endif %}
 
     <div class="summary">
         <strong>Resumen del Reporte:</strong><br>
@@ -267,22 +175,22 @@
             </div>
             <div class="detail-row">
                 <span class="detail-label">Pasajeros:</span>
-                <span class="detail-value">{{ reservation.total_pax_ad }} AD + {{ reservation.total_pax_chd }} CHD = {{ reservation.total_pax }} total</span>
+                <span class="detail-value">{{ reservation.pax_ad }} AD + {{ reservation.pax_chd }} CHD = {{ reservation.total_pax }} total</span>
             </div>
             <div class="detail-row">
                 <span class="detail-label">Tipo Habitación:</span>
-                <span class="detail-value">{{ reservation.get_rooms_display }}</span>
+                <span class="detail-value">{{ reservation.room_type }}</span>
             </div>
             
             <!-- Información Financiera -->
             <div class="financial-info">
                 <div class="financial-row">
                     <span class="detail-label">Precio Venta:</span>
-                    <span class="detail-value">${{ reservation.sale_price|floatformat:2 }}</span>
+                    <span class="detail-value">${{ reservation.sale_price }}</span>
                 </div>
                 <div class="financial-row">
                     <span class="detail-label">Costo:</span>
-                    <span class="detail-value">${{ reservation.touch_cost|floatformat:2 }}</span>
+                    <span class="detail-value">${{ reservation.touch_cost }}</span>
                 </div>
                 <div class="financial-row">
                     <span class="detail-label">Margen:</span>
@@ -332,7 +240,6 @@
     <div class="footer">
         <p>Reporte generado automáticamente por el Sistema de Reservas Hoteleras</p>
         <p>Total de reservas en el reporte: {{ reservations.count }}</p>
-        <p><strong>Tipo de búsqueda:</strong> Basada en fecha de entrada (check-in)</p>
     </div>
 </body>
 </html>

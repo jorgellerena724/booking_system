@@ -1,265 +1,306 @@
-# parser_bedbankglobal.py - VERSIÓN CORREGIDA 
 import re
 from datetime import datetime
-from bs4 import BeautifulSoup
 
-def parsear_html_bedbankglobal(html_content):
+def limpiar_valor_html(valor):
+    """Limpia valores extraídos del HTML"""
+    if not valor:
+        return ""
+    
+    # Eliminar etiquetas HTML
+    valor = re.sub(r'<[^>]*>', '', valor)
+    
+    # Eliminar CSS
+    valor = re.sub(r'\d+(\.\d+)?\s*(pt|px|em|rem|%)[\s;]*', '', valor)
+    valor = re.sub(r'font-[a-z\-]+:\s*[^;\s]+[;\s]*', '', valor, flags=re.IGNORECASE)
+    valor = re.sub(r'color:\s*#[0-9A-f]+[;\s]*', '', valor, flags=re.IGNORECASE)
+    
+    # Eliminar entidades HTML
+    valor = re.sub(r'&[a-z]+;', '', valor)
+    
+    # Eliminar caracteres especiales
+    valor = re.sub(r"['\":;<>]", '', valor)
+    valor = re.sub(r'^\s*:+\s*', '', valor)
+    valor = re.sub(r'\s+', ' ', valor).strip()
+    
+    return valor
+
+def parsear_bedbankglobal_final_funcional(html_content):
     """
-    Parsea el contenido HTML de BedBankGlobal manejando etiquetas y valores en líneas separadas
+    Parser FINAL FUNCIONAL - Extrae nacionalidad correctamente
     """
-    soup = BeautifulSoup(html_content, 'html.parser')
+    print("\n" + "="*60)
+    print("PARSEO BEDBANKGLOBAL - VERSIÓN FINAL FUNCIONAL")
+    print("="*60)
+    
     reservas = []
     
-    print("=== INICIANDO PARSER BEDBANKGLOBAL - LÍNEAS SEPARADAS ===")
-    
-    # Obtener texto plano y dividir en líneas
-    texto_completo = soup.get_text()
-    lineas = texto_completo.split('\n')
-    
-    # Variables para el barrido
-    booking_code = None
-    hotel = None
-    adultos = 0
-    niños = 0
-    bebés = 0
-    pasajeros = []
-    nacionalidad = None
-    fecha_entrada = None
-    fecha_salida = None
-    room_type = None
-    precio = None
-    meal_plan = "All Inclusive"
-    
-    # Estados del barrido
-    en_booking_section = False
-    en_accommodation_section = False
-    en_passengers_section = False
-    
-    # Barrido línea por línea con manejo de líneas consecutivas
-    i = 0
-    while i < len(lineas):
-        linea_actual = lineas[i].strip()
-        if not linea_actual:
-            i += 1
-            continue
-            
-        #print(f"Línea {i}: {linea_actual}")
-        
-        # Detectar secciones
-        if "Booking Data" in linea_actual:
-            en_booking_section = True
-            en_accommodation_section = False
-            en_passengers_section = False
-            print("🔍 ENTRANDO A BOOKING DATA SECTION")
-            i += 1
-            continue
-            
-        if "Accommodation" in linea_actual:
-            en_booking_section = False
-            en_accommodation_section = True
-            en_passengers_section = False
-            print("🔍 ENTRANDO A ACCOMMODATION SECTION")
-            i += 1
-            continue
-            
-        # Extraer datos de Booking Section - manejar líneas separadas
-        if en_booking_section and "Booking" in linea_actual and i + 1 < len(lineas):
-            linea_siguiente = lineas[i + 1].strip()
-            if "code:" in linea_siguiente:
-                # Formato: Línea 85: "Booking", Línea 86: "code: Q7R1SF"
-                booking_code = extraer_valor_despues_de_dos_puntos(linea_siguiente, "code:")
-                print(f"✅ Booking code encontrado: {booking_code}")
-                i += 2  # Saltar ambas líneas
-                continue
-                
-        # Extraer datos de Accommodation Section - manejar líneas separadas
-        if en_accommodation_section:
-            # Hotel: Línea 153: "Hotel:", Línea 154: "Melia Las Dunas"
-            if "Hotel:" in linea_actual and i + 1 < len(lineas):
-                hotel = lineas[i + 1].strip()
-                print(f"✅ Hotel encontrado: {hotel}")
-                i += 2
-                continue
-                
-            # Number of adults: Línea 159: "Number", Línea 160: "of adults: 2"
-            if "Number" in linea_actual and i + 1 < len(lineas):
-                linea_siguiente = lineas[i + 1].strip()
-                if "of adults:" in linea_siguiente:
-                    adultos_str = extraer_valor_despues_de_dos_puntos(linea_siguiente, "of adults:")
-                    adultos = int(adultos_str) if adultos_str and adultos_str.isdigit() else 0
-                    print(f"✅ Adultos encontrados: {adultos}")
-                    i += 2
-                    continue
-                    
-            # Children: Línea 165: "Children:", Línea 166: "0"
-            if "Children:" in linea_actual and i + 1 < len(lineas):
-                niños_str = lineas[i + 1].strip()
-                niños = int(niños_str) if niños_str and niños_str.isdigit() else 0
-                print(f"✅ Niños encontrados: {niños}")
-                i += 2
-                continue
-                
-            # Babies: Línea 171: "Babies: 0" (en una sola línea)
-            if "Babies:" in linea_actual:
-                bebés_str = extraer_valor_despues_de_dos_puntos(linea_actual, "Babies:")
-                bebés = int(bebés_str) if bebés_str and bebés_str.isdigit() else 0
-                print(f"✅ Bebés encontrados: {bebés}")
-                i += 1
-                continue
-                
-            # Passengers: Línea 177: "Passengers:", luego lista de pasajeros
-            if "Passengers:" in linea_actual:
-                en_passengers_section = True
-                print("🔍 ENTRANDO A PASSENGERS SECTION")
-                i += 1
-                continue
-                
-            # Nationality: Línea 183: "Nationality:  SPAIN" (en una línea)
-            if "Nationality:" in linea_actual:
-                nacionalidad = extraer_valor_despues_de_dos_puntos(linea_actual, "Nationality:")
-                print(f"✅ Nacionalidad encontrada: {nacionalidad}")
-                en_passengers_section = False
-                i += 1
-                continue
-                
-            # Arrival Date y Departure Date: Líneas separadas
-            if "Arrival" in linea_actual and i + 1 < len(lineas):
-                linea_siguiente = lineas[i + 1].strip()
-                if "Date:" in linea_siguiente:
-                    fecha_str = extraer_valor_despues_de_dos_puntos(linea_siguiente, "Date:")
-                    if fecha_str:
-                        fecha_entrada = parsear_fecha(fecha_str)
-                        print(f"✅ Fecha entrada encontrada: {fecha_str}")
-                    i += 2
-                    continue
-                    
-            if "Departure" in linea_actual and i + 1 < len(lineas):
-                linea_siguiente = lineas[i + 1].strip()
-                if "Date:" in linea_siguiente:
-                    fecha_str = extraer_valor_despues_de_dos_puntos(linea_siguiente, "Date:")
-                    if fecha_str:
-                        fecha_salida = parsear_fecha(fecha_str)
-                        print(f"✅ Fecha salida encontrada: {fecha_str}")
-                    i += 2
-                    continue
-                    
-            # Rooms: Línea 204: "Rooms: 1", Línea 205: "x CLASSIC ROOM DOUBLE (2 Adults)"
-            if "Rooms:" in linea_actual and i + 1 < len(lineas):
-                room_type_line = lineas[i + 1].strip()
-                if "x CLASSIC ROOM DOUBLE" in room_type_line:
-                    room_type = "CLASSIC ROOM DOUBLE"
-                    print(f"✅ Room type encontrado: {room_type}")
-                i += 2
-                continue
-                
-            # Meal plan: Línea 210: "Meal", Línea 211: "plan: All Inclusive"
-            if "Meal" in linea_actual and i + 1 < len(lineas):
-                linea_siguiente = lineas[i + 1].strip()
-                if "plan:" in linea_siguiente:
-                    meal_plan = extraer_valor_despues_de_dos_puntos(linea_siguiente, "plan:")
-                    print(f"✅ Meal plan encontrado: {meal_plan}")
-                i += 2
-                continue
-                
-            # Cost price: Línea 246: "Cost", Línea 247: "price: 77.38", Línea 248: "USD"
-            if "Cost" in linea_actual and i + 2 < len(lineas):
-                linea_siguiente1 = lineas[i + 1].strip()
-                linea_siguiente2 = lineas[i + 2].strip()
-                if "price:" in linea_siguiente1 and "USD" in linea_siguiente2:
-                    precio_str = extraer_valor_despues_de_dos_puntos(linea_siguiente1, "price:")
-                    if precio_str:
-                        precio = float(precio_str)
-                        print(f"✅ Precio encontrado: {precio} USD")
-                    i += 3
-                    continue
-            
-            # Pasajeros en passengers section
-            if en_passengers_section and linea_actual.startswith('*'):
-                nombre_match = re.match(r'\*\s*([^(]+)\s*\(Years:\s*\d+\)', linea_actual)
-                if nombre_match:
-                    nombre = nombre_match.group(1).strip()
-                    # Corregir nombre con 'A' extra si existe
-                    if nombre.endswith('A') and len(nombre) > 1:
-                        nombre = nombre[:-1].strip()
-                    pasajeros.append(nombre.title())
-                    print(f"✅ Pasajero encontrado: {nombre}")
-                i += 1
-                continue
-        
-        i += 1  # Pasar a la siguiente línea
-    
-    # Validar que tenemos los datos mínimos
-    if not booking_code:
-        print("❌ No se pudo encontrar booking code")
-        return reservas
-        
-    if not fecha_entrada or not fecha_salida:
-        print("❌ No se pudieron encontrar las fechas de check-in/check-out")
-        return reservas
-    
-    # Preparar datos de habitaciones
-    habitaciones = [{
-        'tipo': room_type or "CLASSIC ROOM DOUBLE",
-        'adultos': adultos,
-        'ninos': niños + bebés,  # PAX_CHD = Children + Babies
-        'bebes': 0  # Ya incluidos en ninos
-    }]
-    
-    # Crear objeto de reserva
-    reserva_data = {
-        'booking_code': booking_code,
-        'hotel': hotel or "Hotel no especificado",
-        'fecha_entrada': fecha_entrada,
-        'fecha_salida': fecha_salida,
-        'pasajeros': pasajeros,
-        'habitaciones': habitaciones,
-        'precio': precio,
-        'nacionalidad': nacionalidad or "No especificada",
-        'meal_plan': meal_plan,
-        'proveedor': 'BedBankGlobal'
-    }
-    
-    reservas.append(reserva_data)
-    print(f"✅ Reserva parseada exitosamente: {booking_code}")
-    
-    # Mostrar resumen
-    print(f"\n📊 RESUMEN RESERVA {booking_code}:")
-    print(f"   Hotel: {reserva_data['hotel']}")
-    print(f"   Fechas: {fecha_entrada.date()} a {fecha_salida.date()}")
-    print(f"   Pasajeros: {', '.join(pasajeros)}")
-    print(f"   Habitación: {habitaciones[0]['tipo']} (AD: {adultos}, CHD: {niños + bebés})")
-    print(f"   Precio: {precio} USD")
-    print(f"   Nacionalidad: {nacionalidad}")
-    print(f"   Meal Plan: {meal_plan}")
-    
-    return reservas
-
-def extraer_valor_despues_de_dos_puntos(linea, etiqueta):
-    """
-    Extrae el valor después de los dos puntos en una línea
-    """
-    if etiqueta in linea:
-        partes = linea.split(':', 1)
-        if len(partes) > 1:
-            valor = partes[1].strip()
-            return valor
-    return None
-
-def parsear_fecha(fecha_str):
-    """Convierte string de fecha a objeto datetime"""
     try:
-        return datetime.strptime(fecha_str, '%d/%m/%Y')
-    except ValueError:
-        print(f"⚠️  No se pudo parsear fecha: {fecha_str}")
-        return None
+        # Normalizar HTML
+        html_norm = html_content.replace('\r\n', ' ').replace('\n', ' ')
+        
+        # ===== 1. BOOKING CODE =====
+        booking_code = None
+        
+        booking_match = re.search(r'color:#28A745[^>]*>Booking Code:\s*([A-Z0-9]+)', html_norm)
+        if not booking_match:
+            booking_match = re.search(r'Booking [Cc]ode:\s*([A-Z0-9]+)', html_norm)
+        
+        if booking_match:
+            booking_code = booking_match.group(1).strip()
+            print(f"✅ Booking Code: {booking_code}")
+        
+        if not booking_code:
+            return reservas
+        
+        # ===== 2. PASAJEROS =====
+        pasajeros = []
+        
+        # Buscar sección de passengers
+        passenger_section = re.search(r'Passengers[^<]*:(.*?)(?=<[^>]+>\s*<|</td>)', html_norm, re.IGNORECASE | re.DOTALL)
+        
+        if passenger_section:
+            section = passenger_section.group(1)
+            name_matches = re.findall(r'\*\s*([^(]+?)\s*\(Age:\s*\d+\)', section)
+            if name_matches:
+                pasajeros = [limpiar_valor_html(name).strip() for name in name_matches]
+        
+        if not pasajeros:
+            name_matches = re.findall(r'\*\s*([^(]+?)\s*\(Age:\s*\d+\)', html_norm)
+            if name_matches:
+                pasajeros = [limpiar_valor_html(name).strip() for name in name_matches]
+        
+        if pasajeros:
+            print(f"✅ Pasajeros: {len(pasajeros)}")
+        else:
+            pasajeros = ["CLIENTE NO ESPECIFICADO"]
+            print("⚠️ Usando nombre genérico")
+        
+        # ===== 3. HOTEL =====
+        hotel = ""
+        
+        hotel_match = re.search(r'Hotel[^>]*>(.*?)</span>', html_norm, re.IGNORECASE)
+        if hotel_match:
+            raw_hotel = hotel_match.group(1).strip()
+            hotel = limpiar_valor_html(raw_hotel)
+        
+        if not hotel:
+            hotel_match2 = re.search(r'>Hotel[^<]*<[^>]*>([^<]+)<', html_norm, re.IGNORECASE)
+            if hotel_match2:
+                raw_hotel = hotel_match2.group(1).strip()
+                hotel = limpiar_valor_html(raw_hotel)
+        
+        if hotel:
+            print(f"✅ Hotel: {hotel}")
+        else:
+            hotel = "HOTEL NO ESPECIFICADO"
+            print("⚠️ Hotel no encontrado")
+        
+        # ===== 4. NACIONALIDAD - PATRÓN EXACTO DEL HTML =====
+        nacionalidad = "NO ESPECIFICADA"
+        
+        # PATRÓN EXACTO basado en el HTML que vimos:
+        # Nationality:&nbsp;</span></strong><span ...>&nbsp;SPAIN<o:p>
+        nationality_pattern = r'Nationality[^>]*>&nbsp;</span></strong><span[^>]*>&nbsp;([A-Z]+)<'
+        nationality_match = re.search(nationality_pattern, html_norm, re.IGNORECASE)
+        
+        if nationality_match:
+            nacionalidad = nationality_match.group(1).strip()
+            print(f"✅ Nacionalidad encontrada: {nacionalidad}")
+        else:
+            # Patrón alternativo más flexible
+            alt_pattern = r'Nationality.*?>.*?([A-Z]{2,})<'
+            alt_match = re.search(alt_pattern, html_norm, re.IGNORECASE | re.DOTALL)
+            if alt_match:
+                nacionalidad = alt_match.group(1).strip()
+                print(f"✅ Nacionalidad (alternativo): {nacionalidad}")
+        
+        # Limpiar nacionalidad
+        nacionalidad = limpiar_valor_html(nacionalidad)
+        if not nacionalidad or len(nacionalidad) < 2:
+            nacionalidad = "NO ESPECIFICADA"
+        
+        if nacionalidad != "NO ESPECIFICADA":
+            print(f"✅ Nacionalidad final: {nacionalidad}")
+        
+        # ===== 5. FECHAS =====
+        fecha_entrada = ""
+        fecha_salida = ""
+        
+        arrival_match = re.search(r'Arrival Date[^>]*>(.*?)</span>', html_norm, re.IGNORECASE)
+        if arrival_match:
+            raw_fecha = arrival_match.group(1).strip()
+            fecha_entrada = limpiar_valor_html(raw_fecha)
+        
+        departure_match = re.search(r'Departure Date[^>]*>(.*?)</span>', html_norm, re.IGNORECASE)
+        if departure_match:
+            raw_fecha = departure_match.group(1).strip()
+            fecha_salida = limpiar_valor_html(raw_fecha)
+        
+        if fecha_entrada and fecha_salida:
+            print(f"✅ Fechas: {fecha_entrada} a {fecha_salida}")
+        else:
+            all_dates = re.findall(r'\b(\d{1,2}/\d{1,2}/\d{4})\b', html_norm)
+            if len(all_dates) >= 3:
+                fecha_entrada = all_dates[1]
+                fecha_salida = all_dates[2]
+                print(f"✅ Fechas (alternativo): {fecha_entrada} a {fecha_salida}")
+        
+        # Convertir a YYYY-MM-DD
+        def convertir_fecha(fecha_str):
+            try:
+                return datetime.strptime(fecha_str, '%d/%m/%Y').strftime('%Y-%m-%d')
+            except:
+                return fecha_str
+        
+        fecha_entrada = convertir_fecha(fecha_entrada) if fecha_entrada else ""
+        fecha_salida = convertir_fecha(fecha_salida) if fecha_salida else ""
+        
+        # ===== 6. PRECIO =====
+        precio = 0
+        
+        price_match = re.search(r'Cost price[^>]*>([\d.,]+)\s*USD', html_norm, re.IGNORECASE)
+        if not price_match:
+            all_usd = re.findall(r'([\d.,]+)\s*USD', html_norm)
+            if all_usd:
+                precio_str = all_usd[-1].replace(',', '')
+                try:
+                    precio = float(precio_str)
+                except:
+                    pass
+        
+        if price_match:
+            try:
+                precio_str = price_match.group(1).replace(',', '')
+                precio = float(precio_str)
+            except:
+                pass
+        
+        if precio > 0:
+            print(f"✅ Precio: {precio} USD")
+        else:
+            print("⚠️ Precio no encontrado")
+        
+        # ===== 7. HABITACIONES =====
+        adultos = 2
+        ninos = 0
+        bebes = 0
+        
+        # Adultos
+        adults_match = re.search(r'Number of adults[^>]*>(.*?)</span>', html_norm, re.IGNORECASE)
+        if adults_match:
+            raw_adults = adults_match.group(1).strip()
+            adults_text = limpiar_valor_html(raw_adults)
+            try:
+                adultos = int(adults_text) if adults_text.isdigit() else 2
+            except:
+                pass
+        
+        # Children
+        children_match = re.search(r'Children[^>]*>(.*?)</span>', html_norm, re.IGNORECASE)
+        if children_match:
+            raw_children = children_match.group(1).strip()
+            children_text = limpiar_valor_html(raw_children)
+            try:
+                ninos = int(children_text) if children_text.isdigit() else 0
+            except:
+                pass
+        
+        # Babies
+        babies_match = re.search(r'Babies[^>]*>(.*?)</span>', html_norm, re.IGNORECASE)
+        if babies_match:
+            raw_babies = babies_match.group(1).strip()
+            babies_text = limpiar_valor_html(raw_babies)
+            try:
+                bebes = int(babies_text) if babies_text.isdigit() else 0
+            except:
+                pass
+        
+        print(f"✅ Ocupación: {adultos} adultos, {ninos} niños, {bebes} bebés")
+        
+        # Tipo de habitación
+        room_type = "DELUXE ROOM DOUBLE"
+        rooms_match = re.search(r'Rooms[^>]*>(.*?)</span>', html_norm, re.IGNORECASE)
+        if rooms_match:
+            raw_rooms = rooms_match.group(1).strip()
+            rooms_text = limpiar_valor_html(raw_rooms)
+            room_match = re.search(r'\d+\s*x\s*([^(]+)', rooms_text)
+            if room_match:
+                room_type = room_match.group(1).strip()
+        
+        print(f"🛏️ Habitación: {room_type}")
+        
+        habitaciones = [{
+            'tipo': room_type.upper(),
+            'adultos': adultos,
+            'ninos': ninos,
+            'bebes': bebes
+        }]
+        
+        # ===== 8. PLAN DE COMIDAS =====
+        meal_plan = "ALL INCLUSIVE"
+        meal_match = re.search(r'Meal plan[^>]*>(.*?)</span>', html_norm, re.IGNORECASE)
+        if meal_match:
+            raw_meal = meal_match.group(1).strip()
+            meal_text = limpiar_valor_html(raw_meal)
+            meal_plan = meal_text if meal_text else "ALL INCLUSIVE"
+        
+        print(f"🍽️ Plan: {meal_plan}")
+        
+        # ===== 9. CREAR RESERVA =====
+        if fecha_entrada and fecha_salida:
+            # Concatenar TODOS los nombres de pasajeros
+            nombres_completos = ", ".join([p.upper() for p in pasajeros])
+            
+            reserva = {
+                'booking_code': booking_code,
+                'voucher': booking_code,
+                'pasajeros': pasajeros,
+                'nombres_completos': nombres_completos,
+                'nacionalidad': nacionalidad.upper(),
+                'hotel': hotel.upper(),
+                'fechas': {
+                    'checkin': fecha_entrada,
+                    'checkout': fecha_salida
+                },
+                'fecha_entrada': fecha_entrada,
+                'fecha_salida': fecha_salida,
+                'precio': precio,
+                'precio_total': precio,
+                'habitaciones': habitaciones,
+                'meal_plan': meal_plan.upper()
+            }
+            
+            reservas.append(reserva)
+            
+            print("\n" + "="*60)
+            print("🎉 IMPORTACIÓN COMPLETA 🎉")
+            print("="*60)
+            print(f"📋 Código: {booking_code}")
+            print(f"🏨 Hotel: {hotel}")
+            print(f"📅 Check-in: {fecha_entrada}")
+            print(f"📅 Check-out: {fecha_salida}")
+            print(f"👥 Huéspedes: {nombres_completos}")
+            print(f"💰 Total: {precio} USD")
+            print(f"🛏️ Tipo: {room_type}")
+            print(f"🍽️ Régimen: {meal_plan}")
+            print(f"🇪🇸 Nacionalidad: {nacionalidad}")
+            print("="*60 + "\n")
+        
+        return reservas
+        
+    except Exception as e:
+        print(f"\n❌ Error en parser: {e}")
+        import traceback
+        traceback.print_exc()
+        return []
 
-# Función principal de procesamiento
+
+def parsear_bedbankglobal(html_content):
+    print("\n" + "="*60)
+    print("PARSEO BEDBANKGLOBAL")
+    print("="*60)
+    return parsear_bedbankglobal_final_funcional(html_content)
+
+
 def procesar_reserva_bedbankglobal(html_content):
-    """
-    Función principal que procesa el contenido HTML y devuelve las reservas
-    """
-    # Parsear las reservas
-    reservas = parsear_html_bedbankglobal(html_content)
-    
-    print(f"=== PARSER COMPLETADO: {len(reservas)} reservas encontradas ===")
-    return reservas
+    return parsear_bedbankglobal(html_content)
