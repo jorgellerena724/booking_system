@@ -14,14 +14,13 @@ jobs:
       - name: Configurar Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.9'
+          python-version: '3.11'  # VERSIÓN ACTUALIZADA AQUÍ
 
       - name: Instalar dependencias
         run: |
           pip install -r requirements.txt
           pip install pyinstaller
 
-      # NUEVO PASO: Configurar entorno Django
       - name: Configurar entorno Django
         run: |
           echo "Configurando entorno Django..."
@@ -31,7 +30,6 @@ jobs:
           python -c "import django; print(f'Django {django.__version__} configurado correctamente')"
         shell: pwsh
 
-      # El .bat se ejecuta AHORA con el entorno configurado
       - name: Construir ejecutable (Ejecutar tu .bat)
         run: cmd /c build_final.bat
 
