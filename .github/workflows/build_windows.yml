@@ -1,15 +1,19 @@
-name: Generar Paquete Portable de Windows
+name: Generar Release con Instalador
 
 on:
   push:
-    branches: [ main, master ]
+    tags:
+      - 'v*'  # ¡IMPORTANTE! Se activa SOLO con tags como v1.0, v2.1, etc.
 
 jobs:
-  build-portable:
+  build-and-release:
     runs-on: windows-latest
+    
     steps:
-      - name: Obtener el código fuente
+      - name: Obtener código (incluyendo tags)
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Necesario para leer tags
 
       - name: Configurar Python
         uses: actions/setup-python@v5
@@ -23,43 +27,25 @@ jobs:
 
       - name: Configurar entorno Django
         run: |
-          echo "Configurando entorno Django..."
           $env:PYTHONPATH = "$env:PYTHONPATH;$pwd"
           $env:DJANGO_SETTINGS_MODULE = "booking_system.settings"
-          python -c "import django; print(f'Django {django.__version__} configurado correctamente')"
         shell: pwsh
 
-      - name: Construir ejecutable (Ejecutar tu .bat)
+      - name: Ejecutar build
         run: cmd /c build_final.bat
 
-      - name: Verificar estructura generada
+      - name: Empaquetar para release
         run: |
-          echo "Listando contenido de la carpeta de salida:"
-          # Comando corregido para PowerShell
-          if (Test-Path "dist\SistemaReservas") {
-            Get-ChildItem -Path "dist\SistemaReservas" -File | ForEach-Object { $_.Name }
-            echo ""
-            echo "Listando directorios dentro de la carpeta:"
-            Get-ChildItem -Path "dist\SistemaReservas" -Directory | ForEach-Object { $_.Name }
-          } else {
-            echo "¡La carpeta 'dist\SistemaReservas' no existe! El build falló."
-          }
-        shell: pwsh
+          # Extrae el número de versión del tag (ej: v1.2.3 -> 1.2.3)
+          $tag = "${{ github.ref_name }}"
+          $version = $tag.TrimStart('v')
+          Compress-Archive -Path "dist\SistemaReservas" -DestinationPath "SistemaReservas_v$version.zip"
 
-      - name: Empaquetar para distribución
-        run: |
-          if (Test-Path "dist\SistemaReservas") {
-            Compress-Archive -Path "dist\SistemaReservas" -DestinationPath "SistemaReservas_Portable.zip" -Force
-            echo "ZIP creado exitosamente."
-          } else {
-            echo "ERROR: No se puede crear el ZIP porque 'dist\SistemaReservas' no existe."
-            exit 1
-          }
-        shell: pwsh
-
-      - name: Subir paquete como artefacto
-        uses: actions/upload-artifact@v4
+      - name: Crear Release en GitHub
+        uses: softprops/action-gh-release@v1
         with:
-          name: SistemaReservas-Portable-Windows
-          path: SistemaReservas_Portable.zip
-          retention-days: 7
+          files: |
+            SistemaReservas_v$version.zip
+          generate_release_notes: true  # Crea notas automáticas con los commits
+          draft: false  # Publicar inmediatamente
+          prerelease: false
