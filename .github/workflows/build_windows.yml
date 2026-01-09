@@ -3,17 +3,21 @@ name: Generar Release con Instalador
 on:
   push:
     tags:
-      - 'v*'  # ¡IMPORTANTE! Se activa SOLO con tags como v1.0, v2.1, etc.
+      - 'v*'
+
+# PERMISOS CRÍTICOS: Esto soluciona el error 403
+permissions:
+  contents: write  # Permite crear releases y subir assets
 
 jobs:
   build-and-release:
     runs-on: windows-latest
     
     steps:
-      - name: Obtener código (incluyendo tags)
+      - name: Obtener código
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Necesario para leer tags
+          fetch-depth: 0
 
       - name: Configurar Python
         uses: actions/setup-python@v5
@@ -35,17 +39,24 @@ jobs:
         run: cmd /c build_final.bat
 
       - name: Empaquetar para release
+        id: package  # Este ID permite usar la variable después
         run: |
-          # Extrae el número de versión del tag (ej: v1.2.3 -> 1.2.3)
+          # CORRECCIÓN CLAVE: Definir $version correctamente
           $tag = "${{ github.ref_name }}"
           $version = $tag.TrimStart('v')
-          Compress-Archive -Path "dist\SistemaReservas" -DestinationPath "SistemaReservas_v$version.zip"
+          $zipName = "SistemaReservas_v$version.zip"
+          Compress-Archive -Path "dist\SistemaReservas" -DestinationPath $zipName
+          
+          # Guardar el nombre para usarlo en el siguiente paso
+          echo "zip_name=$zipName" >> $env:GITHUB_OUTPUT
+          echo "Empaquetado como: $zipName"
+        shell: pwsh
 
       - name: Crear Release en GitHub
         uses: softprops/action-gh-release@v1
         with:
-          files: |
-            SistemaReservas_v$version.zip
-          generate_release_notes: true  # Crea notas automáticas con los commits
-          draft: false  # Publicar inmediatamente
+          # CORRECCIÓN: Usar la variable del paso anterior
+          files: ${{ steps.package.outputs.zip_name }}
+          generate_release_notes: true
+          draft: false
           prerelease: false
