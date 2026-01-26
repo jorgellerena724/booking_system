@@ -1,21 +1,113 @@
-{% extends 'base.html' %}
+<!-- templates/reservations/importar_menu.html -->
+{% extends 'reservations/base.html' %}
+
+{% block title %}Importar Reservas{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-6 offset-md-3">
-        <div class="card">
-            <div class="card-header">
-                <h3 class="card-title">Importar Reservas</h3>
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">
+                        <i class="fas fa-file-import"></i> Importar Reservas desde Diferentes Sistemas
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">Selecciona el sistema desde el cual deseas importar reservas:</p>
+                    
+                    <div class="list-group">
+                        <!-- Paximum -->
+                        <a href="{% url 'reservations:importar_paximum' %}" class="list-group-item list-group-item-action d-flex align-items-center">
+                            <div class="me-3">
+                                <i class="fas fa-file-import fa-2x text-primary"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h5 class="mb-1">Paximum</h5>
+                                <p class="mb-1 text-muted">Importar reservas desde archivos HTML de Paximum</p>
+                            </div>
+                            <div>
+                                <i class="fas fa-chevron-right"></i>
+                            </div>
+                        </a>
+                        
+                        <!-- BedBankGlobal -->
+                        <a href="{% url 'reservations:importar_bedbankglobal' %}" class="list-group-item list-group-item-action d-flex align-items-center">
+                            <div class="me-3">
+                                <i class="fas fa-file-import fa-2x text-success"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h5 class="mb-1">BedBankGlobal</h5>
+                                <p class="mb-1 text-muted">Importar reservas desde archivos HTML de BedBankGlobal</p>
+                            </div>
+                            <div>
+                                <i class="fas fa-chevron-right"></i>
+                            </div>
+                        </a>
+                        
+                        <!-- YUPPI -->
+                        <a href="{% url 'reservations:importar_yuppi' %}" class="list-group-item list-group-item-action d-flex align-items-center">
+                            <div class="me-3">
+                                <i class="fas fa-file-import fa-2x text-warning"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h5 class="mb-1">YUPPI</h5>
+                                <p class="mb-1 text-muted">Importar reservas desde archivos HTML de YUPPI Travel</p>
+                            </div>
+                            <div>
+                                <i class="fas fa-chevron-right"></i>
+                            </div>
+                        </a>
+                        
+                        <!-- Espacio para futuros sistemas -->
+                        <div class="list-group-item disabled">
+                            <div class="d-flex align-items-center">
+                                <div class="me-3">
+                                    <i class="fas fa-plus-circle fa-2x text-secondary"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h5 class="mb-1">Otros Sistemas</h5>
+                                    <p class="mb-1 text-muted">Más sistemas de importación próximamente</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <a href="{% url 'reservations:list' %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Volver al Listado
+                        </a>
+                    </div>
+                </div>
             </div>
-            <div class="card-body text-center">
-                <div class="list-group">
-                    <a href="{% url 'importar_paximum' %}" class="list-group-item list-group-item-action">
-                        <i class="fas fa-file-import"></i> Importar desde Paximum
-                    </a>
-                    <!-- Futuros sistemas de importación -->
-                    <a href="#" class="list-group-item list-group-item-action disabled">
-                        <i class="fas fa-file-import"></i> Otro Sistema (Próximamente)
-                    </a>
+            
+            <!-- Información adicional -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle"></i> Información sobre la Importación
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <h6><i class="fas fa-check-circle text-success"></i> Formato compatible</h6>
+                            <p class="small">Archivos HTML de confirmación de reservas (.html, .htm)</p>
+                        </div>
+                        <div class="col-md-4">
+                            <h6><i class="fas fa-check-circle text-success"></i> Datos extraídos</h6>
+                            <p class="small">Booking code, fechas, hotel, pasajeros, precios, etc.</p>
+                        </div>
+                        <div class="col-md-4">
+                            <h6><i class="fas fa-check-circle text-success"></i> Validación automática</h6>
+                            <p class="small">Detección de duplicados y validación de datos</p>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-info mt-3">
+                        <i class="fas fa-lightbulb"></i> <strong>Recomendación:</strong> Asegúrate de que el archivo HTML sea 
+                        una confirmación de reserva del sistema seleccionado. Cada sistema tiene un formato específico.
+                    </div>
                 </div>
             </div>
         </div>

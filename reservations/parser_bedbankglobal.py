@@ -27,6 +27,7 @@ def limpiar_valor_html(valor):
 def parsear_bedbankglobal_final_funcional(html_content):
     """
     Parser FINAL FUNCIONAL - Extrae nacionalidad correctamente
+    Ahora también separa cantidad de niños/bebés de sus edades
     """
     print("\n" + "="*60)
     print("PARSEO BEDBANKGLOBAL - VERSIÓN FINAL FUNCIONAL")
@@ -184,6 +185,7 @@ def parsear_bedbankglobal_final_funcional(html_content):
         adultos = 2
         ninos = 0
         bebes = 0
+        observaciones_list = []  # Lista para acumular observaciones
         
         # Adultos
         adults_match = re.search(r'Number of adults[^>]*>(.*?)</span>', html_norm, re.IGNORECASE)
@@ -195,27 +197,52 @@ def parsear_bedbankglobal_final_funcional(html_content):
             except:
                 pass
         
-        # Children
+        # Children - MODIFICADO: Separar cantidad de edades
         children_match = re.search(r'Children[^>]*>(.*?)</span>', html_norm, re.IGNORECASE)
         if children_match:
             raw_children = children_match.group(1).strip()
             children_text = limpiar_valor_html(raw_children)
-            try:
-                ninos = int(children_text) if children_text.isdigit() else 0
-            except:
-                pass
+            
+            # Separar cantidad de edades
+            # Formato esperado: "2 5,7" o "1 3" o solo "2"
+            if children_text:
+                children_parts = children_text.split(' ', 1)  # Separar por primer espacio
+                
+                if len(children_parts) >= 1 and children_parts[0].isdigit():
+                    # Primer parte es la cantidad de niños
+                    ninos = int(children_parts[0])
+                    
+                    # Si hay segunda parte, son las edades (ir a observaciones)
+                    if len(children_parts) > 1 and children_parts[1].strip():
+                        edades_children = children_parts[1].strip()
+                        observaciones_list.append(f"Edades niños: {edades_children} años")
         
-        # Babies
+        # Babies - MODIFICADO: Separar cantidad de edades
         babies_match = re.search(r'Babies[^>]*>(.*?)</span>', html_norm, re.IGNORECASE)
         if babies_match:
             raw_babies = babies_match.group(1).strip()
             babies_text = limpiar_valor_html(raw_babies)
-            try:
-                bebes = int(babies_text) if babies_text.isdigit() else 0
-            except:
-                pass
+            
+            # Separar cantidad de edades
+            if babies_text:
+                babies_parts = babies_text.split(' ', 1)  # Separar por primer espacio
+                
+                if len(babies_parts) >= 1 and babies_parts[0].isdigit():
+                    # Primer parte es la cantidad de bebés
+                    bebes = int(babies_parts[0])
+                    
+                    # Si hay segunda parte, son las edades (ir a observaciones)
+                    if len(babies_parts) > 1 and babies_parts[1].strip():
+                        edades_babies = babies_parts[1].strip()
+                        observaciones_list.append(f"Edades bebés: {edades_babies} años")
         
         print(f"✅ Ocupación: {adultos} adultos, {ninos} niños, {bebes} bebés")
+        
+        # Unir todas las observaciones en un solo string
+        observaciones = ""
+        if observaciones_list:
+            observaciones = " | ".join(observaciones_list)
+            print(f"📝 Observaciones: {observaciones}")
         
         # Tipo de habitación
         room_type = "DELUXE ROOM DOUBLE"
@@ -267,7 +294,8 @@ def parsear_bedbankglobal_final_funcional(html_content):
                 'precio': precio,
                 'precio_total': precio,
                 'habitaciones': habitaciones,
-                'meal_plan': meal_plan.upper()
+                'meal_plan': meal_plan.upper(),
+                'observaciones': observaciones.upper() if observaciones else ""
             }
             
             reservas.append(reserva)
@@ -284,6 +312,8 @@ def parsear_bedbankglobal_final_funcional(html_content):
             print(f"🛏️ Tipo: {room_type}")
             print(f"🍽️ Régimen: {meal_plan}")
             print(f"🇪🇸 Nacionalidad: {nacionalidad}")
+            if observaciones:
+                print(f"📝 Observaciones: {observaciones}")
             print("="*60 + "\n")
         
         return reservas

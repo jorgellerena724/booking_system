@@ -23,4 +23,5 @@ urlpatterns = [
     path('importar/', views.importar_menu, name='importar_menu'),
     path('importar/paximum/', views.importar_paximum, name='importar_paximum'),
     path('importar/bedbankglobal/', views.importar_bedbankglobal, name='importar_bedbankglobal'),
+    path('importar/yuppi/', views.importar_yuppi, name='importar_yuppi'),
 ]

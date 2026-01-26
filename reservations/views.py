@@ -1686,3 +1686,151 @@ def importar_bedbankglobal(request):
         'active_menu': 'importar',
     }
     return render(request, 'reservations/importar_bedbankglobal.html', context)
+
+@login_required
+def importar_yuppi(request):
+    """Importar reservas desde archivos HTML de YUPPI"""
+    if request.method == 'POST':
+        if 'archivo_html' in request.FILES:
+            archivo = request.FILES['archivo_html']
+            
+            try:
+                # Leer el contenido del archivo
+                html_bytes = archivo.read()
+                file_size = len(html_bytes)
+                
+                print(f"Archivo YUPPI recibido: {archivo.name}, tamaño: {file_size} bytes")
+                
+                # Detectar codificación
+                encodings = ['utf-8', 'utf-16', 'latin-1', 'windows-1252']
+                html_content = None
+                detected_encoding = None
+                
+                for encoding in encodings:
+                    try:
+                        html_content = html_bytes.decode(encoding)
+                        detected_encoding = encoding
+                        print(f"Codificación detectada: {encoding}")
+                        break
+                    except UnicodeDecodeError:
+                        continue
+                
+                if html_content is None:
+                    messages.error(request, "No se pudo decodificar el archivo. Codificación no soportada.")
+                    return redirect('reservations:importar_yuppi')
+                
+                print(f"Contenido leído: {len(html_content)} caracteres")
+                
+                # Importar y usar el parser de YUPPI
+                from .parser_yuppi import parsear_yuppi
+                reservas = parsear_yuppi(html_content)
+                
+                if not reservas:
+                    messages.warning(request, "No se encontraron reservas en el archivo. Verifique el formato.")
+                    return redirect('reservations:importar_yuppi')
+                
+                reservas_creadas = 0
+                reservas_con_error = 0
+                
+                for i, reserva_data in enumerate(reservas, 1):
+                    print(f"Procesando reserva YUPPI {i}: {reserva_data.get('booking_code', 'N/A')}")
+                    
+                    # Validar datos críticos
+                    if not reserva_data.get('fecha_entrada') or not reserva_data.get('fecha_salida'):
+                        print(f"❌ Error YUPPI: Fechas faltantes para reserva {reserva_data.get('booking_code', 'N/A')}")
+                        reservas_con_error += 1
+                        messages.warning(request, f"Reserva {reserva_data.get('booking_code', 'N/A')}: Faltan fechas de check-in/out")
+                        continue
+                    
+                    if not reserva_data.get('pasajeros'):
+                        print(f"❌ Error YUPPI: No hay pasajeros para reserva {reserva_data.get('booking_code', 'N/A')}")
+                        reservas_con_error += 1
+                        messages.warning(request, f"Reserva {reserva_data.get('booking_code', 'N/A')}: No se encontraron pasajeros")
+                        continue
+                    
+                    try:
+                        # Adaptar datos al formato esperado por crear_reserva_desde_importacion
+                        datos_adaptados = {
+                            'voucher': reserva_data['booking_code'],
+                            'booking_code': reserva_data['booking_code'],
+                            'hotel': reserva_data.get('hotel', '').upper(),
+                            'fechas': {
+                                'checkin': reserva_data['fecha_entrada'],
+                                'checkout': reserva_data['fecha_salida']
+                            },
+                            'fecha_entrada': reserva_data['fecha_entrada'],
+                            'fecha_salida': reserva_data['fecha_salida'],
+                            'pasajeros': reserva_data.get('pasajeros', []),
+                            'nombres_completos': ", ".join(reserva_data.get('pasajeros', [])).upper(),
+                            'habitaciones': [],
+                            'precio': reserva_data.get('precio', 0),
+                            'precio_total': str(reserva_data.get('precio', 0)),
+                            'nacionalidad': reserva_data.get('nacionalidad', '').upper(),
+                            'meal_plan': reserva_data.get('meal_plan', 'BED & BREAKFAST').upper(),
+                            'observaciones': reserva_data.get('observaciones', '').upper()
+                        }
+                        
+                        # Convertir habitaciones al formato correcto
+                        for hab in reserva_data.get('habitaciones', []):
+                            datos_adaptados['habitaciones'].append({
+                                'tipo': hab.get('tipo', '').upper(),
+                                'adultos': hab.get('adultos', 0),
+                                'ninos': hab.get('ninos', 0),
+                                'bebes': hab.get('bebes', 0),
+                                'regimen': reserva_data.get('meal_plan', 'BED & BREAKFAST').upper()
+                            })
+                        
+                        print(f"✅ Datos YUPPI adaptados - Pasajeros: {len(datos_adaptados['pasajeros'])}")
+                        print(f"✅ Datos YUPPI adaptados - Nombres completos: {datos_adaptados['nombres_completos']}")
+                        print(f"✅ Datos YUPPI adaptados - Nacionalidad: {datos_adaptados['nacionalidad']}")
+                        
+                        # Usar la función genérica para crear la reserva
+                        if crear_reserva_desde_importacion(datos_adaptados, request.user, 'YUPPI'):
+                            reservas_creadas += 1
+                            print(f"✅ Reserva YUPPI creada exitosamente: {reserva_data['booking_code']}")
+                            messages.success(request, f"Reserva {reserva_data['booking_code']} importada correctamente")
+                        else:
+                            reservas_con_error += 1
+                            messages.error(request, f"Error al crear reserva {reserva_data['booking_code']}")
+                            
+                    except IntegrityError as e:
+                        if 'UNIQUE constraint' in str(e):
+                            print(f"❌ Error YUPPI: Booking code duplicado {reserva_data.get('booking_code', 'N/A')}")
+                            messages.error(request, f"Reserva {reserva_data.get('booking_code', 'N/A')}: Booking code ya existe")
+                        else:
+                            print(f"❌ Error de integridad YUPPI: {e}")
+                            messages.error(request, f"Error al crear reserva {reserva_data.get('booking_code', 'N/A')}: {e}")
+                        reservas_con_error += 1
+                        
+                    except Exception as e:
+                        print(f"❌ Error inesperado creando reserva YUPPI {reserva_data.get('booking_code', 'N/A')}: {e}")
+                        import traceback
+                        print(f"Traceback: {traceback.format_exc()}")
+                        messages.error(request, f"Error inesperado con reserva {reserva_data.get('booking_code', 'N/A')}: {str(e)}")
+                        reservas_con_error += 1
+                
+                # Resumen final
+                if reservas_creadas > 0:
+                    messages.success(request, f"✅ {reservas_creadas} reserva(s) YUPPI importada(s) correctamente")
+                if reservas_con_error > 0:
+                    messages.warning(request, f"⚠️ {reservas_con_error} reserva(s) YUPPI no se pudieron importar")
+                
+                return redirect('reservations:list')
+                
+            except Exception as e:
+                print(f"❌ Error general procesando archivo YUPPI: {e}")
+                import traceback
+                print(f"Traceback: {traceback.format_exc()}")
+                messages.error(request, f"Error procesando archivo YUPPI: {str(e)}")
+                return redirect('reservations:importar_yuppi')
+        
+        else:
+            messages.error(request, "No se seleccionó ningún archivo.")
+            return redirect('reservations:importar_yuppi')
+    
+    # GET request - mostrar formulario
+    context = {
+        'title': 'Importar YUPPI',
+        'active_menu': 'importar',
+    }
+    return render(request, 'reservations/importar_yuppi.html', context)
