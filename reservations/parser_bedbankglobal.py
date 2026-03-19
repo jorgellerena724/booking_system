@@ -8,6 +8,7 @@ def limpiar_valor_html(valor):
     if not valor:
         return ""
     
+    
     # Eliminar etiquetas HTML
     valor = re.sub(r'<[^>]*>', '', valor)
     
