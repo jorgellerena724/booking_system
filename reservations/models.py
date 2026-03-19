@@ -52,8 +52,8 @@ class Reservation(models.Model):
                 sale_price_dec = Decimal(str(self.sale_price))
                 touch_cost_dec = Decimal(str(self.touch_cost))
                 
-                if touch_cost_dec > 0:
-                    profit = ((sale_price_dec - touch_cost_dec) / touch_cost_dec) * 100
+                if sale_price_dec > 0:
+                    profit = ((sale_price_dec - touch_cost_dec) / sale_price_dec) * 100
                     # Redondear a 2 decimales usando quantize
                     self.profit_percentage = profit.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
                 else:
