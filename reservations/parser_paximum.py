@@ -3,6 +3,7 @@ from bs4 import BeautifulSoup
 import re
 from datetime import datetime
 from collections import defaultdict
+from decimal import Decimal
 
 class ParserPaximum:
     
@@ -18,7 +19,7 @@ class ParserPaximum:
             'fechas': {'checkin': None, 'checkout': None},
             'habitaciones': [],
             'huespedes': [],
-            'precio_total': '0.00'
+            'precio_total': Decimal('0.00')
         })
         
         # Encontrar todas las secciones por voucher
@@ -264,9 +265,12 @@ class ParserPaximum:
                     # Extraer el número del precio
                     numeros = re.findall(r'\d+[.,]\d+', precio_match)
                     if numeros:
-                        # Reemplazar coma por punto para conversión float
-                        precio = numeros[0].replace(',', '.')
-                        return precio
+                        # Convertir a Decimal para precisión
+                        precio_str = numeros[0].replace(',', '.')
+                        try:
+                            return Decimal(precio_str)
+                        except:
+                            return Decimal('0.00')
             
             # Moverse al elemento padre
             if hasattr(area_busqueda, 'parent'):
@@ -274,4 +278,4 @@ class ParserPaximum:
             else:
                 break
         
-        return '0.00'
+        return Decimal('0.00')

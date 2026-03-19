@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from decimal import Decimal, ROUND_HALF_UP, InvalidOperation
 
 class Reservation(models.Model):
     STATUS_CHOICES = [
@@ -47,14 +48,20 @@ class Reservation(models.Model):
         # Solo si no está cancelada y tenemos los datos necesarios
         if self.status != 'CXX' and self.sale_price is not None and self.touch_cost is not None:
             try:
-                if self.touch_cost > 0:
-                    self.profit_percentage = ((self.sale_price - self.touch_cost) / self.touch_cost) * 100
+                # Convertir a Decimal para cálculos precisos
+                sale_price_dec = Decimal(str(self.sale_price))
+                touch_cost_dec = Decimal(str(self.touch_cost))
+                
+                if touch_cost_dec > 0:
+                    profit = ((sale_price_dec - touch_cost_dec) / touch_cost_dec) * 100
+                    # Redondear a 2 decimales usando quantize
+                    self.profit_percentage = profit.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
                 else:
-                    self.profit_percentage = 0
-            except (TypeError, ZeroDivisionError):
-                self.profit_percentage = 0
+                    self.profit_percentage = Decimal('0.00')
+            except (TypeError, InvalidOperation, ZeroDivisionError):
+                self.profit_percentage = Decimal('0.00')
         elif self.status == 'CXX':
-            self.profit_percentage = 0
+            self.profit_percentage = Decimal('0.00')
         
         super().save(*args, **kwargs)
 

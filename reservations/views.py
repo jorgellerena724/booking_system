@@ -3,6 +3,7 @@ import shutil
 import json
 from datetime import datetime, timedelta
 import re
+from decimal import Decimal
 
 import pandas as pd
 from django.shortcuts import render, get_object_or_404, redirect
@@ -146,19 +147,19 @@ def crear_reserva_desde_importacion(data_reserva, user, fuente):
             }]
         
         # ===== 5. PRECIO =====
-        precio_venta = 0
+        precio_venta = Decimal('0')
         if 'precio' in data_reserva:
             try:
-                precio_venta = float(str(data_reserva['precio']).replace(',', '.'))
+                precio_venta = Decimal(str(data_reserva['precio']).replace(',', '.'))
             except:
                 try:
-                    precio_venta = float(data_reserva['precio'])
+                    precio_venta = Decimal(str(data_reserva['precio']))
                 except:
                     pass
         
         if precio_venta == 0 and 'precio_total' in data_reserva:
             try:
-                precio_venta = float(str(data_reserva['precio_total']).replace(',', '.'))
+                precio_venta = Decimal(str(data_reserva['precio_total']).replace(',', '.'))
             except:
                 pass
         
@@ -206,7 +207,7 @@ def crear_reserva_desde_importacion(data_reserva, user, fuente):
             date_to=date_to,
             meal_plan=data_reserva.get('meal_plan', 'ALOJAMIENTO DESAYUNO').upper(),
             sale_price=precio_venta,
-            touch_cost=0,
+            touch_cost=Decimal('0'),
             nationality=nacionalidad,
             remarks=observaciones,
             created_by=user

@@ -1,5 +1,6 @@
 import re
 from datetime import datetime
+from decimal import Decimal
 
 def limpiar_valor_html(valor):
     """Limpia valores extraídos del HTML (misma función que BedBankGlobal)"""
@@ -150,7 +151,7 @@ def parsear_yuppi(html_content):
         fecha_salida = convertir_fecha(fecha_salida) if fecha_salida else ""
         
         # ===== 7. PRECIO =====
-        precio = 0
+        precio = Decimal('0')
         
         price_match = re.search(r'Total cost:</strong[^>]*>\s*([\d.,]+)\s*USD', html_norm, re.IGNORECASE)
         if not price_match:
@@ -159,14 +160,14 @@ def parsear_yuppi(html_content):
             if all_usd:
                 precio_str = all_usd[-1].replace(',', '')
                 try:
-                    precio = float(precio_str)
+                    precio = Decimal(precio_str)
                 except:
                     pass
         
         if price_match:
             try:
                 precio_str = price_match.group(1).replace(',', '')
-                precio = float(precio_str)
+                precio = Decimal(precio_str)
             except:
                 pass
         
