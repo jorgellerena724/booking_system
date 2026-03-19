@@ -2,6 +2,7 @@ import re
 from datetime import datetime
 from decimal import Decimal
 
+
 def limpiar_valor_html(valor):
     """Limpia valores extraídos del HTML"""
     if not valor:
